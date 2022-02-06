@@ -45,7 +45,8 @@ towl = library(
 pkgconfig = import('pkgconfig')
 cpp = meson.get_compiler('cpp')
 pkgconfig.generate(
-    libraries: [towl, cpp.find_library('wayland-client'), cpp.find_library('wayland-egl')],
+    libraries: [towl],
+    requires: [wayland_client, wayland_egl],
     name: 'towl',
     filebase: 'towl',
     description: 'libtowl'
