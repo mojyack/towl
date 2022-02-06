@@ -282,6 +282,7 @@ class Seat {
             static_assert(!(SeatKeyboardOnLeave<KeyboardGlue> && version < WL_KEYBOARD_LEAVE_SINCE_VERSION));
             static_assert(!(SeatKeyboardOnKey<KeyboardGlue> && version < WL_KEYBOARD_KEY_SINCE_VERSION));
             static_assert(!(SeatKeyboardOnModifiers<KeyboardGlue> && version < WL_KEYBOARD_MODIFIERS_SINCE_VERSION));
+            static_assert(!(SeatKeyboardOnRepeatInfo<KeyboardGlue> && version < WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION));
 
             assert(keyboard);
             wl_keyboard_add_listener(keyboard, &listener, this);
