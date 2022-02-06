@@ -3,9 +3,9 @@
 Write C++ wayland client easily
 
 # Dependencies
-wayland-protocols >= 1.24
-wayland-client
-wayland-egl
+wayland-protocols >= 1.24  
+wayland-client  
+wayland-egl  
 
 # Build
 Meson and Ninja required
