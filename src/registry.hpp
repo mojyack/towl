@@ -4,6 +4,7 @@
 #include <concepts>
 #include <cstring>
 #include <sstream>
+#include <vector>
 
 #include "internal.hpp"
 
