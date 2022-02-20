@@ -20,7 +20,7 @@ struct Array {
 struct Empty {};
 
 template <class T>
-concept IsEmpty = std::is_same_v<T, Empty>();
+concept IsEmpty = std::is_same_v<T, Empty>;
 
 #ifdef TOWL_NS
 }
