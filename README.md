@@ -14,4 +14,5 @@ meson build && ninja -C build
 ```
 
 # How to use
-See [gawl](https://github.com/mojyack/gawl)
+See [towl-examples](https://github.com/mojyack/towl-examples) for examples   
+and [gawl](https://github.com/mojyack/gawl) for actual usage
