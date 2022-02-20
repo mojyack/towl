@@ -5,8 +5,9 @@
 namespace TOWL_NS {
 #endif
 
-using SurfaceTag         = size_t;
-using OutputTag          = size_t;
+using SurfaceTag = size_t;
+using OutputTag  = size_t;
+
 constexpr size_t nulltag = 0;
 
 template <class T>

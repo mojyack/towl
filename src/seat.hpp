@@ -348,7 +348,7 @@ class Seat {
     auto interface_id() const -> uint32_t {
         return id;
     }
-    Seat(void* const data, const uint32_t id, auto&& glue) : seat(reinterpret_cast<wl_seat*>(data)), id(id), glue(glue) {
+    Seat(void* const data, const uint32_t id, SeatGlue&& glue) : seat(reinterpret_cast<wl_seat*>(data)), id(id), glue(glue) {
         static_assert(version >= WL_SEAT_CAPABILITIES_SINCE_VERSION);
         static_assert(version >= WL_SEAT_NAME_SINCE_VERSION);
 

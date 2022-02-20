@@ -1,6 +1,5 @@
 #pragma once
 #include <array>
-#include <cassert>
 #include <concepts>
 #include <cstring>
 #include <sstream>
@@ -12,24 +11,8 @@
 namespace TOWL_NS {
 #endif
 
-template <class T>
-concept GlueParameter = requires(T& m) {
-    typename T::Interface;
-};
-
-template <GlueParameter... Parameters>
-struct GlueParameterPack {
-    std::tuple<Parameters...> value;
-};
-
-template <class GlueParameterPack, internal::Interface... Interfaces>
+template <class GlueParameter, internal::Interface... Interfaces>
 class Registry {
-  public:
-    template <class Interface, class Value>
-    struct GlueInitializer : Value {
-        using Type = Interface;
-    };
-
   private:
     struct Deleter {
         auto operator()(wl_registry* const registry) -> void {
@@ -38,7 +21,7 @@ class Registry {
     };
 
     std::unique_ptr<wl_registry, Deleter> registry;
-    GlueParameterPack                     parameter_pack;
+    GlueParameter                         parameter;
 
     using InterfaceArrays = std::tuple<std::vector<Interfaces>...>;
     InterfaceArrays interface_arrays;
@@ -54,22 +37,6 @@ class Registry {
 
     static inline wl_registry_listener listener = {global_callback, remove_callback};
 
-    template <size_t n>
-    auto emplace_with_initializer(auto& interface_array, const internal::InterfaceInfo& info, const uint32_t id) -> void {
-        if constexpr(n < std::tuple_size_v<decltype(parameter_pack.value)>) {
-            using Interface      = typename std::remove_reference_t<decltype(interface_array)>::value_type;
-            auto& initializer    = std::get<n>(parameter_pack.value);
-            using InitializerFor = typename std::remove_reference_t<decltype(initializer)>::Interface;
-            if constexpr(std::is_same_v<InitializerFor, Interface>) {
-                interface_array.emplace_back(wl_registry_bind(registry.get(), id, info.structure, info.version), id, initializer);
-            } else {
-                emplace_with_initializer<n + 1>(interface_array, info, id);
-            }
-        } else {
-            interface_array.emplace_back(wl_registry_bind(registry.get(), id, info.structure, info.version), id);
-        }
-    }
-
     template <size_t n = 0>
     auto bind_interface(const char* const name, const uint32_t version, const uint32_t id) -> void {
         if constexpr(n < std::tuple_size_v<InterfaceArrays>) {
@@ -83,7 +50,11 @@ class Registry {
             if(info.version > version) {
                 panic("application requires version ", info.version, " of ", info.name, ", but server provides version ", version, ".");
             }
-            emplace_with_initializer<0>(interface_array, info, id);
+            if constexpr(std::is_constructible_v<Interface, void*, uint32_t, GlueParameter&>) {
+                interface_array.emplace_back(wl_registry_bind(registry.get(), id, info.structure, info.version), id, parameter);
+            } else {
+                interface_array.emplace_back(wl_registry_bind(registry.get(), id, info.structure, info.version), id);
+            }
         }
     }
 
@@ -144,7 +115,7 @@ class Registry {
     auto ensure_interfaces() -> bool {
         return ensure_interfaces<0>();
     }
-    Registry(wl_registry* const registry, GlueParameterPack&& parameter_pack) : registry(registry), parameter_pack(parameter_pack) {
+    Registry(wl_registry* const registry, GlueParameter&& parameter) : registry(registry), parameter(parameter) {
         wl_registry_add_listener(registry, &listener, this);
     }
 };
