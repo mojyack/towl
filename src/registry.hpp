@@ -115,7 +115,7 @@ class Registry {
     auto ensure_interfaces() -> bool {
         return ensure_interfaces<0>();
     }
-    Registry(wl_registry* const registry, GlueParameter&& parameter) : registry(registry), parameter(parameter) {
+    Registry(wl_registry* const registry, GlueParameter&& parameter) : registry(registry), parameter(std::move(parameter)) {
         wl_registry_add_listener(registry, &listener, this);
     }
 };

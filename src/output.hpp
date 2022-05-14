@@ -73,7 +73,7 @@ class Output {
     auto operator==(const OutputTag tag) const -> bool {
         return output.get() == reinterpret_cast<wl_output*>(tag);
     }
-    Output(void* const data, const uint32_t id, OutputGlue&& glue) : output(reinterpret_cast<wl_output*>(data)), id(id), glue(glue) {
+    Output(void* const data, const uint32_t id, OutputGlue&& glue) : output(reinterpret_cast<wl_output*>(data)), id(id), glue(std::move(glue)) {
         // static_assert(!(OutputOnGeometry<OutputGlue> && version < WL_OUTPUT_GEOMETRY_SINCE_VERSION));
         // static_assert(!(OutputOnMode<OutputGlue> && version < WL_OUTPUT_MODE_SINCE_VERSION));
         // static_assert(!(OutputOnDone<OutputGlue> && version < WL_OUTPUT_DONE_SINCE_VERSION));

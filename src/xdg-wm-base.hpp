@@ -67,7 +67,7 @@ class WMBase {
             static_assert(version >= XDG_TOPLEVEL_SET_TITLE_SINCE_VERSION);
             xdg_toplevel_set_title(toplevel.get(), title);
         }
-        XDGToplevel(xdg_toplevel* const toplevel, XDGToplevelGlue&& glue) : toplevel(toplevel), glue(glue) {
+        XDGToplevel(xdg_toplevel* const toplevel, XDGToplevelGlue&& glue) : toplevel(toplevel), glue(std::move(glue)) {
             static_assert(!(WMBaseXDGToplevelOnConfigure<XDGToplevelGlue> && version < XDG_TOPLEVEL_CONFIGURE_SINCE_VERSION));
             static_assert(!(WMBaseXDGToplevelOnClose<XDGToplevelGlue> && version < XDG_TOPLEVEL_CLOSE_SINCE_VERSION));
 

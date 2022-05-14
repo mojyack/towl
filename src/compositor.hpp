@@ -117,7 +117,7 @@ class Compositor {
         auto operator==(const SurfaceTag tag) const -> bool {
             return surface.get() == reinterpret_cast<wl_surface*>(tag);
         }
-        Surface(wl_surface* const surface, SurfaceGlue&& glue) : surface(surface), glue(glue) {
+        Surface(wl_surface* const surface, SurfaceGlue&& glue) : surface(surface), glue(std::move(glue)) {
             static_assert(!(CompositorSurfaceEnter<SurfaceGlue> && version < WL_SURFACE_ENTER_SINCE_VERSION));
             static_assert(!(CompositorSurfaceLeave<SurfaceGlue> && version < WL_SURFACE_LEAVE_SINCE_VERSION));
 
