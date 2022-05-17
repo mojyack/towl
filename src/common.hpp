@@ -8,7 +8,7 @@ namespace TOWL_NS {
 using SurfaceTag = size_t;
 using OutputTag  = size_t;
 
-constexpr size_t nulltag = 0;
+constexpr auto nulltag = size_t(0);
 
 template <class T>
 struct Array {
