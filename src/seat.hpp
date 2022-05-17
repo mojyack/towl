@@ -200,7 +200,7 @@ class Seat {
 
         static inline wl_pointer_listener listener = {enter, leave, motion, button, axis, frame, axis_source, axis_stop, axis_descrete};
 
-        [[no_unique_address]] typename std::conditional<!IsEmpty<PointerGlue>, PointerGlue*, Empty>::type glue;
+        [[no_unique_address]] std::conditional_t<!IsEmpty<PointerGlue>, PointerGlue*, Empty> glue;
 
       public:
         Pointer(wl_pointer* const pointer, PointerGlue& glue) : pointer(pointer), glue(&glue) {
@@ -273,7 +273,7 @@ class Seat {
 
         static inline wl_keyboard_listener listener = {keymap, enter, leave, key, modifiers, repeat_info};
 
-        [[no_unique_address]] typename std::conditional<!IsEmpty<KeyboardGlue>, KeyboardGlue*, Empty>::type glue;
+        [[no_unique_address]] std::conditional_t<!IsEmpty<KeyboardGlue>, KeyboardGlue*, Empty> glue;
 
       public:
         Keyboard(wl_keyboard* const keyboard, KeyboardGlue& glue) : keyboard(keyboard), glue(&glue) {

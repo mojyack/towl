@@ -42,7 +42,7 @@ class WMBase {
 
         std::unique_ptr<xdg_toplevel, Deleter> toplevel;
 
-        [[no_unique_address]] typename std::conditional<!IsEmpty<XDGToplevelGlue>, XDGToplevelGlue, Empty>::type glue;
+        [[no_unique_address]] std::conditional_t<!IsEmpty<XDGToplevelGlue>, XDGToplevelGlue, Empty> glue;
 
         static auto configure(void* const data, xdg_toplevel* const /*toplevel*/, const int32_t width, const int32_t height, wl_array* const /*states*/) -> void {
             if constexpr(WMBaseXDGToplevelOnConfigure<XDGToplevelGlue>) {

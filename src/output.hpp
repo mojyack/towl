@@ -23,7 +23,7 @@ template <uint32_t version, OutputGlue OutputGlue>
 class Output {
   private:
     struct Deleter {
-        auto operator()(wl_output* const  output) -> void {
+        auto operator()(wl_output* const output) -> void {
             if(version >= WL_OUTPUT_RELEASE_SINCE_VERSION) {
                 wl_output_release(output);
             } else {
@@ -52,7 +52,7 @@ class Output {
 
     int32_t scaling_factor = 1;
 
-    [[no_unique_address]] typename std::conditional<!IsEmpty<OutputGlue>, OutputGlue, Empty>::type glue;
+    [[no_unique_address]] std::conditional_t<!IsEmpty<OutputGlue>, OutputGlue, Empty> glue;
 
   public:
     static auto info() -> internal::InterfaceInfo {

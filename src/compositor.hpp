@@ -71,7 +71,7 @@ class Compositor {
 
         static inline wl_surface_listener listener = {enter, leave};
 
-        [[no_unique_address]] typename std::conditional<!IsEmpty<SurfaceGlue>, SurfaceGlue, Empty>::type glue;
+        [[no_unique_address]] std::conditional_t<!IsEmpty<SurfaceGlue>, SurfaceGlue, Empty> glue;
 
         static auto done(void* const data, wl_callback* const /*wl_callback*/, const uint32_t /*callback_data*/) -> void {
             if constexpr(CompositorSurfaceFrame<SurfaceGlue>) {
