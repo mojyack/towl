@@ -60,6 +60,7 @@ class Display {
     auto native() -> wl_display* {
         return display.get();
     }
+
     auto wait_sync() -> void {
         auto flag = std::atomic_flag(false);
         auto sync = wl_display_sync(display.get());
@@ -67,24 +68,30 @@ class Display {
         flush();
         flag.wait(false);
     }
+
     auto get_fd() -> int {
         return wl_display_get_fd(display.get());
     }
+
     auto obtain_read_intent() -> ReadIntent {
         while(wl_display_prepare_read(display.get()) != 0) {
             wl_display_dispatch_pending(display.get());
         }
         return display.get();
     }
+
     auto roundtrip() -> bool {
         return wl_display_roundtrip(display.get()) != 0;
     }
+
     auto dispatch() -> bool {
         return wl_display_dispatch(display.get()) != -1;
     }
+
     auto dispatch_pending() -> bool {
         return wl_display_dispatch_pending(display.get()) != -1;
     }
+
     auto flush() -> void {
         wl_display_flush(display.get());
     }

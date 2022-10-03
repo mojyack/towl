@@ -67,6 +67,7 @@ class WMBase {
             static_assert(version >= XDG_TOPLEVEL_SET_TITLE_SINCE_VERSION);
             xdg_toplevel_set_title(toplevel.get(), title);
         }
+
         XDGToplevel(xdg_toplevel* const toplevel, XDGToplevelGlue&& glue) : toplevel(toplevel), glue(std::move(glue)) {
             static_assert(!(WMBaseXDGToplevelOnConfigure<XDGToplevelGlue> && version < XDG_TOPLEVEL_CONFIGURE_SINCE_VERSION));
             static_assert(!(WMBaseXDGToplevelOnClose<XDGToplevelGlue> && version < XDG_TOPLEVEL_CLOSE_SINCE_VERSION));
@@ -107,9 +108,11 @@ class WMBase {
             static_assert(version >= XDG_SURFACE_GET_TOPLEVEL_SINCE_VERSION);
             return XDGToplevel<Glue>(xdg_surface_get_toplevel(surface.get()), std::move(glue));
         }
+
         auto is_configured() const -> bool {
             return configured;
         }
+
         XDGSurface(xdg_surface* const surface) : surface(surface) {
             static_assert(version >= XDG_TOPLEVEL_CONFIGURE_SINCE_VERSION);
 
@@ -140,13 +143,16 @@ class WMBase {
     static auto info() -> internal::InterfaceInfo {
         return {"xdg_wm_base", version, &xdg_wm_base_interface};
     }
+
     auto interface_id() const -> uint32_t {
         return id;
     }
+
     auto create_xdg_surface(internal::SurfaceLike auto& surface) -> XDGSurface {
         static_assert(version >= XDG_WM_BASE_GET_XDG_SURFACE_SINCE_VERSION);
         return {xdg_wm_base_get_xdg_surface(wm_base.get(), surface.native())};
     }
+
     WMBase(void* const data, const uint32_t id) : wm_base(reinterpret_cast<xdg_wm_base*>(data)), id(id) {
         static_assert(version >= XDG_WM_BASE_PING_SINCE_VERSION);
         xdg_wm_base_add_listener(wm_base.get(), &listener, this);

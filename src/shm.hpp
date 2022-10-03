@@ -27,6 +27,7 @@ class Shm {
         auto native() -> wl_buffer* {
             return buffer.get();
         }
+
         Buffer(wl_buffer* const buffer) : buffer(buffer) {
             assert(buffer);
         }
@@ -40,6 +41,7 @@ class Shm {
                 wl_shm_pool_destroy(shm_pool);
             }
         };
+
         std::unique_ptr<wl_shm_pool, Deleter> shm_pool;
 
       public:
@@ -47,6 +49,7 @@ class Shm {
             static_assert(version >= WL_SHM_POOL_CREATE_BUFFER_SINCE_VERSION);
             return wl_shm_pool_create_buffer(shm_pool.get(), offset, width, height, stride, format);
         }
+
         ShmPool(wl_shm_pool* const shm_pool) : shm_pool(shm_pool) {
             assert(shm_pool);
         }
@@ -66,13 +69,16 @@ class Shm {
     static auto info() -> internal::InterfaceInfo {
         return {"wl_shm", version, &wl_shm_interface};
     }
+
     auto interface_id() const -> uint32_t {
         return id;
     }
+
     auto create_shm_pool(const int posix_shm, const size_t size) -> ShmPool {
         static_assert(version >= WL_SHM_CREATE_POOL_SINCE_VERSION);
         return wl_shm_create_pool(shm.get(), posix_shm, size);
     }
+
     Shm(void* const data, const uint32_t id) : shm(reinterpret_cast<wl_shm*>(data)), id(id) {}
 };
 

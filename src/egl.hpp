@@ -23,12 +23,15 @@ class EGLWindow {
     auto native() -> wl_egl_window* {
         return egl_window.get();
     }
+
     auto resize(const int width, const int height, const int dx, const int dy) -> void {
         wl_egl_window_resize(egl_window.get(), width, height, dx, dy);
     }
+
     auto get_attached_size(int& width, int& height) -> void {
         wl_egl_window_get_attached_size(egl_window.get(), &width, &height);
     }
+
     EGLWindow(internal::SurfaceLike auto& surface, const int width, const int height) : egl_window(wl_egl_window_create(surface.native(), width, height)) {
         assert(egl_window);
     }

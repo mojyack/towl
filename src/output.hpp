@@ -36,8 +36,11 @@ class Output {
     uint32_t                            id;
 
     static auto geometry(void* const /*data*/, wl_output* const /*wl_output*/, const int32_t /*x*/, const int32_t /*y*/, const int32_t /*physical_width*/, const int32_t /*physical_height*/, const int32_t /*subpixel*/, const char* const /*make*/, const char* const /*model*/, const int32_t /*transform*/) {}
+
     static auto mode(void* const /*data*/, wl_output* const /*wl_output*/, const uint32_t /*flags*/, const int32_t /*width*/, const int32_t /*height*/, const int32_t /*refresh*/) {}
+
     static auto done(void* const /*data*/, wl_output* const /*wl_output*/) {}
+
     static auto scale(void* const data, wl_output* const /*wl_output*/, const int32_t factor) {
         auto& self          = *reinterpret_cast<Output*>(data);
         self.scaling_factor = factor;
@@ -45,7 +48,9 @@ class Output {
             self.glue.on_scale(reinterpret_cast<OutputTag>(self.output.get()), factor);
         }
     }
+
     static auto name(void* const /*data*/, wl_output* const /*wl_output*/, const char* const /*name*/) {}
+
     static auto description(void* const /*data*/, wl_output* /*wl_output*/, const char* const /*description*/) {}
 
     static inline wl_output_listener listener = {geometry, mode, done, scale, name, description};
@@ -58,21 +63,27 @@ class Output {
     static auto info() -> internal::InterfaceInfo {
         return {"wl_output", version, &wl_output_interface};
     }
+
     auto interface_id() const -> uint32_t {
         return id;
     }
+
     auto as_tag() const -> OutputTag {
         return reinterpret_cast<size_t>(output.get());
     }
+
     static auto from_tag(const OutputTag output) -> Output& {
         return *reinterpret_cast<Output*>(wl_output_get_user_data(reinterpret_cast<wl_output*>(output)));
     }
+
     auto get_scale() const -> int32_t {
         return scaling_factor;
     }
+
     auto operator==(const OutputTag tag) const -> bool {
         return output.get() == reinterpret_cast<wl_output*>(tag);
     }
+
     Output(void* const data, const uint32_t id, OutputGlue&& glue) : output(reinterpret_cast<wl_output*>(data)), id(id), glue(std::move(glue)) {
         // static_assert(!(OutputOnGeometry<OutputGlue> && version < WL_OUTPUT_GEOMETRY_SINCE_VERSION));
         // static_assert(!(OutputOnMode<OutputGlue> && version < WL_OUTPUT_MODE_SINCE_VERSION));

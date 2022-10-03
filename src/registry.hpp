@@ -30,6 +30,7 @@ class Registry {
         auto& self = *reinterpret_cast<Registry*>(data);
         self.bind_interface(interface, version, id);
     }
+
     static auto remove_callback(void* const data, wl_registry* const /*registry*/, const uint32_t id) -> void {
         auto& self = *reinterpret_cast<Registry*>(data);
         self.unbind_interface(id);
@@ -112,9 +113,11 @@ class Registry {
     auto interface() -> std::vector<T>& {
         return find_interface_array<0, T>();
     }
+
     auto ensure_interfaces() -> bool {
         return ensure_interfaces<0>();
     }
+
     Registry(wl_registry* const registry, GlueParameter&& parameter) : registry(registry), parameter(std::move(parameter)) {
         wl_registry_add_listener(registry, &listener, this);
     }

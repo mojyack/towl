@@ -140,15 +140,18 @@ class Compositor {
     static auto info() -> internal::InterfaceInfo {
         return {"wl_compositor", version, &wl_compositor_interface};
     }
+
     auto interface_id() const -> uint32_t {
         return id;
     }
+
     template <CompositorSurfaceGlue Glue>
     auto create_surface(Glue&& glue) -> Surface<Glue> {
         static_assert(version >= WL_COMPOSITOR_CREATE_SURFACE_SINCE_VERSION);
 
         return {wl_compositor_create_surface(compositor.get()), std::move(glue)};
     }
+
     Compositor(void* const data, const uint32_t id) : compositor(reinterpret_cast<wl_compositor*>(data)), id(id) {}
 };
 
