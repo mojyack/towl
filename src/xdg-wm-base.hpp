@@ -26,7 +26,7 @@ concept WMBaseXDGToplevelGlue =
      WMBaseXDGToplevelOnClose<Glue> ||
      IsEmpty<Glue>)&&std::movable<Glue>;
 
-// version = 1 ~ 3
+// version = 1 ~ 4
 template <uint32_t version>
 class WMBase {
   public:
@@ -60,7 +60,9 @@ class WMBase {
             }
         }
 
-        static inline xdg_toplevel_listener listener = {configure, close};
+        static auto bounds(void* const /*data*/, xdg_toplevel* const /*toplevel*/, const int32_t /*width*/, const int32_t /*height*/) -> void {}
+
+        static inline auto listener = xdg_toplevel_listener{configure, close, bounds};
 
       public:
         auto set_title(const char* const title) -> void {

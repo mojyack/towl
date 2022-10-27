@@ -2,6 +2,7 @@
 #include <array>
 #include <concepts>
 #include <cstring>
+#include <memory>
 #include <sstream>
 #include <vector>
 
