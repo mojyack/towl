@@ -1,9 +1,9 @@
-project('towl', ['cpp', 'c'], version : '1.0.3', default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++20'])
+project('towl', ['cpp', 'c'], version : '1.0.4', default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++20'])
 
 wayland_client    = dependency('wayland-client')
 wayland_cursor    = dependency('wayland-cursor')
 wayland_egl       = dependency('wayland-egl')
-wayland_protocols = dependency('wayland-protocols', version: '>=1.24')
+wayland_protocols = dependency('wayland-protocols', version: '>=1.26')
 
 wayland_scanner_dep = dependency('wayland-scanner', native: true)
 wayland_scanner     = find_program(wayland_scanner_dep.get_variable(pkgconfig: 'wayland_scanner'), native: true)
