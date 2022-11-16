@@ -12,11 +12,11 @@ namespace TOWL_NS {
 
 template <class Glue>
 concept OutputOnScale = requires(Glue& m, OutputTag output, int32_t scale) {
-    m.on_scale(output, scale);
-};
+                            m.on_scale(output, scale);
+                        };
 
 template <class Glue>
-concept OutputGlue = (OutputOnScale<Glue> || IsEmpty<Glue>)&&std::movable<Glue>;
+concept OutputGlue = (OutputOnScale<Glue> || IsEmpty<Glue>) && std::movable<Glue>;
 
 // version = 1 ~ 4
 template <uint32_t version, OutputGlue OutputGlue>
@@ -33,7 +33,6 @@ class Output {
     };
 
     std::unique_ptr<wl_output, Deleter> output;
-    uint32_t                            id;
 
     static auto geometry(void* const /*data*/, wl_output* const /*wl_output*/, const int32_t /*x*/, const int32_t /*y*/, const int32_t /*physical_width*/, const int32_t /*physical_height*/, const int32_t /*subpixel*/, const char* const /*make*/, const char* const /*model*/, const int32_t /*transform*/) {}
 
@@ -55,9 +54,10 @@ class Output {
 
     static inline wl_output_listener listener = {geometry, mode, done, scale, name, description};
 
-    int32_t scaling_factor = 1;
+    uint32_t id;
+    int32_t  scaling_factor = 1;
 
-    [[no_unique_address]] std::conditional_t<!IsEmpty<OutputGlue>, OutputGlue, Empty> glue;
+    [[no_unique_address]] OutputGlue glue;
 
   public:
     static auto info() -> internal::InterfaceInfo {
@@ -84,7 +84,7 @@ class Output {
         return output.get() == reinterpret_cast<wl_output*>(tag);
     }
 
-    Output(void* const data, const uint32_t id, OutputGlue&& glue) : output(reinterpret_cast<wl_output*>(data)), id(id), glue(std::move(glue)) {
+    Output(void* const data, const uint32_t id, OutputGlue glue) : output(reinterpret_cast<wl_output*>(data)), id(id), glue(std::move(glue)) {
         // static_assert(!(OutputOnGeometry<OutputGlue> && version < WL_OUTPUT_GEOMETRY_SINCE_VERSION));
         // static_assert(!(OutputOnMode<OutputGlue> && version < WL_OUTPUT_MODE_SINCE_VERSION));
         // static_assert(!(OutputOnDone<OutputGlue> && version < WL_OUTPUT_DONE_SINCE_VERSION));

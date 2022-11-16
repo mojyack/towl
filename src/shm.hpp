@@ -63,7 +63,8 @@ class Shm {
     };
 
     std::unique_ptr<wl_shm, Deleter> shm;
-    uint32_t                         id;
+
+    uint32_t id;
 
   public:
     static auto info() -> internal::InterfaceInfo {

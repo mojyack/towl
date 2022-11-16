@@ -12,25 +12,26 @@ namespace TOWL_NS {
 
 template <class Glue>
 concept CompositorSurfaceEnter = requires(Glue& m, OutputTag output) {
-    m.on_enter(output);
-};
+                                     m.on_enter(output);
+                                 };
 
 template <class Glue>
 concept CompositorSurfaceLeave = requires(Glue& m, OutputTag output) {
-    m.on_leave(output);
-};
+                                     m.on_leave(output);
+                                 };
 
 template <class Glue>
 concept CompositorSurfaceFrame = requires(Glue& m) {
-    m.on_frame();
-};
+                                     m.on_frame();
+                                 };
 
 template <class Glue>
 concept CompositorSurfaceGlue =
     (CompositorSurfaceEnter<Glue> ||
      CompositorSurfaceLeave<Glue> ||
      CompositorSurfaceFrame<Glue> ||
-     IsEmpty<Glue>)&&std::movable<Glue>;
+     IsEmpty<Glue>) &&
+    std::movable<Glue>;
 
 // version = 1 ~ 4
 template <uint32_t version>
@@ -62,6 +63,7 @@ class Compositor {
                 self.glue.on_enter(reinterpret_cast<OutputTag>(output));
             }
         }
+
         static auto leave(void* const data, wl_surface* const /*surface*/, wl_output* const output) -> void {
             if constexpr(CompositorSurfaceEnter<SurfaceGlue>) {
                 auto& self = *reinterpret_cast<Surface*>(data);
@@ -70,8 +72,6 @@ class Compositor {
         }
 
         static inline wl_surface_listener listener = {enter, leave};
-
-        [[no_unique_address]] std::conditional_t<!IsEmpty<SurfaceGlue>, SurfaceGlue, Empty> glue;
 
         static auto done(void* const data, wl_callback* const /*wl_callback*/, const uint32_t /*callback_data*/) -> void {
             if constexpr(CompositorSurfaceFrame<SurfaceGlue>) {
@@ -83,26 +83,33 @@ class Compositor {
 
         static inline wl_callback_listener frame_listener = {done};
 
+        [[no_unique_address]] SurfaceGlue glue;
+
       public:
         auto native() -> wl_surface* {
             return surface.get();
         }
+
         auto attach(internal::BufferLike auto& buffer, const int32_t x, const int32_t y) -> void {
             static_assert(version >= WL_SURFACE_ATTACH_SINCE_VERSION);
             wl_surface_attach(surface.get(), buffer.native(), x, y);
         }
+
         auto damage(const int32_t x, const int32_t y, const int32_t width, const int32_t height) -> void {
             static_assert(version >= WL_SURFACE_DAMAGE_BUFFER_SINCE_VERSION);
             wl_surface_damage_buffer(surface.get(), x, y, width, height);
         }
+
         auto commit() -> void {
             static_assert(version >= WL_SURFACE_COMMIT_SINCE_VERSION);
             wl_surface_commit(surface.get());
         }
+
         auto set_buffer_scale(const int32_t scale) -> void {
             static_assert(version >= WL_SURFACE_SET_BUFFER_SCALE_SINCE_VERSION);
             wl_surface_set_buffer_scale(surface.get(), scale);
         }
+
         auto set_frame() -> void {
             if constexpr(CompositorSurfaceFrame<SurfaceGlue>) {
                 if(!frame) {
@@ -111,13 +118,16 @@ class Compositor {
                 }
             }
         }
+
         auto as_tag() const -> SurfaceTag {
             return reinterpret_cast<size_t>(surface.get());
         }
+
         auto operator==(const SurfaceTag tag) const -> bool {
             return surface.get() == reinterpret_cast<wl_surface*>(tag);
         }
-        Surface(wl_surface* const surface, SurfaceGlue&& glue) : surface(surface), glue(std::move(glue)) {
+
+        Surface(wl_surface* const surface, SurfaceGlue glue) : surface(surface), glue(std::move(glue)) {
             static_assert(!(CompositorSurfaceEnter<SurfaceGlue> && version < WL_SURFACE_ENTER_SINCE_VERSION));
             static_assert(!(CompositorSurfaceLeave<SurfaceGlue> && version < WL_SURFACE_LEAVE_SINCE_VERSION));
 
@@ -146,7 +156,7 @@ class Compositor {
     }
 
     template <CompositorSurfaceGlue Glue>
-    auto create_surface(Glue&& glue) -> Surface<Glue> {
+    auto create_surface(Glue glue) -> Surface<Glue> {
         static_assert(version >= WL_COMPOSITOR_CREATE_SURFACE_SINCE_VERSION);
 
         return {wl_compositor_create_surface(compositor.get()), std::move(glue)};

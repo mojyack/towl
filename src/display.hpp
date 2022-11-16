@@ -24,14 +24,19 @@ class Display {
             wl_display_read_events(display);
             done = true;
         }
+
         auto cancel() -> void {
             if(!done) {
                 wl_display_cancel_read(display);
             }
         }
+
         auto operator=(ReadIntent&) -> ReadIntent& = delete;
-        ReadIntent(ReadIntent&)                    = delete;
+
+        ReadIntent(ReadIntent&) = delete;
+
         ReadIntent(wl_display* const display) : display(display) {}
+
         ~ReadIntent() {
             cancel();
         }
@@ -97,7 +102,7 @@ class Display {
     }
 
     template <class GlueParameterPack, internal::Interface... Interfaces>
-    auto get_registry(GlueParameterPack&& parameter_pack) -> Registry<GlueParameterPack, Interfaces...> {
+    auto get_registry(GlueParameterPack parameter_pack) -> Registry<GlueParameterPack, Interfaces...> {
         return Registry<GlueParameterPack, Interfaces...>(wl_display_get_registry(display.get()), std::move(parameter_pack));
     }
 

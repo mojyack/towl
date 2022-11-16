@@ -12,48 +12,48 @@ namespace TOWL_NS {
 
 template <class Glue>
 concept SeatPointerOnEnter = requires(Glue& m, SurfaceTag surface, double x, double y) {
-    m.on_enter(surface, x, y);
-};
+                                 m.on_enter(surface, x, y);
+                             };
 
 template <class Glue>
 concept SeatPointerOnLeave = requires(Glue& m, SurfaceTag surface) {
-    m.on_leave(surface);
-};
+                                 m.on_leave(surface);
+                             };
 
 template <class Glue>
 concept SeatPointerOnMotion = requires(Glue& m, double x, double y) {
-    m.on_motion(x, y);
-};
+                                  m.on_motion(x, y);
+                              };
 
 template <class Glue>
 concept SeatPointerOnButton = requires(Glue& m, uint32_t button, uint32_t state) {
-    m.on_button(button, state);
-};
+                                  m.on_button(button, state);
+                              };
 
 template <class Glue>
 concept SeatPointerOnAxis = requires(Glue& m, uint32_t axis, double value) {
-    m.on_axis(axis, value);
-};
+                                m.on_axis(axis, value);
+                            };
 
 template <class Glue>
 concept SeatPointerOnFrame = requires(Glue& m) {
-    m.on_frame();
-};
+                                 m.on_frame();
+                             };
 
 template <class Glue>
 concept SeatPointerOnAxisSource = requires(Glue& m, uint32_t source) {
-    m.on_axis_source(source);
-};
+                                      m.on_axis_source(source);
+                                  };
 
 template <class Glue>
 concept SeatPointerOnAxisStop = requires(Glue& m, uint32_t axis) {
-    m.on_axis_stop(axis);
-};
+                                    m.on_axis_stop(axis);
+                                };
 
 template <class Glue>
 concept SeatPointerOnAxisDiscrete = requires(Glue& m, uint32_t axis, int32_t discrete) {
-    m.on_axis_discrete(axis, discrete);
-};
+                                        m.on_axis_discrete(axis, discrete);
+                                    };
 
 template <class Glue>
 concept SeatPointerGlue =
@@ -70,33 +70,33 @@ concept SeatPointerGlue =
 
 template <class Glue>
 concept SeatKeyboardOnKeymap = requires(Glue& m, uint32_t format, int32_t fd, uint32_t size) {
-    m.on_keymap(format, fd, size);
-};
+                                   m.on_keymap(format, fd, size);
+                               };
 
 template <class Glue>
 concept SeatKeyboardOnEnter = requires(Glue& m, SurfaceTag surface, const Array<uint32_t>& keys) {
-    m.on_enter(surface, keys);
-};
+                                  m.on_enter(surface, keys);
+                              };
 
 template <class Glue>
 concept SeatKeyboardOnLeave = requires(Glue& m, SurfaceTag surface) {
-    m.on_leave(surface);
-};
+                                  m.on_leave(surface);
+                              };
 
 template <class Glue>
 concept SeatKeyboardOnKey = requires(Glue& m, uint32_t key, uint32_t state) {
-    m.on_key(key, state);
-};
+                                m.on_key(key, state);
+                            };
 
 template <class Glue>
 concept SeatKeyboardOnModifiers = requires(Glue& m, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) {
-    m.on_modifiers(mods_depressed, mods_latched, mods_locked, group);
-};
+                                      m.on_modifiers(mods_depressed, mods_latched, mods_locked, group);
+                                  };
 
 template <class Glue>
 concept SeatKeyboardOnRepeatInfo = requires(Glue& m, int32_t rate, int32_t delay) {
-    m.on_repeat_info(rate, delay);
-};
+                                       m.on_repeat_info(rate, delay);
+                                   };
 
 template <class Glue>
 concept SeatKeyboardGlue =
@@ -110,19 +110,20 @@ concept SeatKeyboardGlue =
 
 template <class Glue>
 concept GlueWithSeatPointerGlue = requires(Glue& m) {
-    SeatPointerGlue<decltype(m.pointer_glue)>;
-};
+                                      SeatPointerGlue<decltype(m.pointer_glue)>;
+                                  };
 
 template <class Glue>
 concept GlueWithSeatKeyboardGlue = requires(Glue& m) {
-    SeatKeyboardGlue<decltype(m.keyboard_glue)>;
-};
+                                       SeatKeyboardGlue<decltype(m.keyboard_glue)>;
+                                   };
 
 template <class Glue>
 concept SeatGlue =
     (GlueWithSeatPointerGlue<Glue> ||
      GlueWithSeatKeyboardGlue<Glue> ||
-     IsEmpty<Glue>)&&std::movable<Glue>;
+     IsEmpty<Glue>) &&
+    std::movable<Glue>;
 
 // version = 1 ~ 7
 template <uint32_t version, SeatGlue SeatGlue>
@@ -208,7 +209,7 @@ class Seat {
 
         static inline wl_pointer_listener listener = {enter, leave, motion, button, axis, frame, axis_source, axis_stop, axis_descrete};
 
-        [[no_unique_address]] std::conditional_t<!IsEmpty<PointerGlue>, PointerGlue*, Empty> glue;
+        PointerGlue* glue;
 
       public:
         Pointer(wl_pointer* const pointer, PointerGlue& glue) : pointer(pointer), glue(&glue) {
@@ -286,7 +287,7 @@ class Seat {
 
         static inline wl_keyboard_listener listener = {keymap, enter, leave, key, modifiers, repeat_info};
 
-        [[no_unique_address]] std::conditional_t<!IsEmpty<KeyboardGlue>, KeyboardGlue*, Empty> glue;
+        KeyboardGlue* glue;
 
       public:
         Keyboard(wl_keyboard* const keyboard, KeyboardGlue& glue) : keyboard(keyboard), glue(&glue) {
@@ -314,36 +315,21 @@ class Seat {
     };
 
     std::unique_ptr<wl_seat, Deleter> seat;
-    uint32_t                          id;
-
-    [[no_unique_address]] SeatGlue glue;
-    using PointerGlue  = std::conditional_t<GlueWithSeatPointerGlue<SeatGlue>, decltype(glue.pointer_glue), Empty>;
-    using KeyboardGlue = std::conditional_t<GlueWithSeatKeyboardGlue<SeatGlue>, decltype(glue.keyboard_glue), Empty>;
-    [[no_unique_address]] std::conditional_t<GlueWithSeatPointerGlue<SeatGlue>, std::optional<Pointer<PointerGlue>>, Empty>    pointer;
-    [[no_unique_address]] std::conditional_t<GlueWithSeatKeyboardGlue<SeatGlue>, std::optional<Keyboard<KeyboardGlue>>, Empty> keyboard;
 
     static auto capabilities(void* const data, wl_seat* const /*seat*/, const uint32_t cap) -> void {
         auto& self = *reinterpret_cast<Seat*>(data);
-        if constexpr(SeatPointerGlue<PointerGlue>) {
+        if constexpr(GlueWithSeatPointerGlue<SeatGlue>) {
             if(cap & WL_SEAT_CAPABILITY_POINTER) {
                 static_assert(version >= WL_SEAT_GET_POINTER_SINCE_VERSION);
-                if constexpr(GlueWithSeatPointerGlue<SeatGlue>) {
-                    self.pointer.emplace(wl_seat_get_pointer(self.seat.get()), self.glue.pointer_glue);
-                } else {
-                    self.pointer.emplace(wl_seat_get_pointer(self.seat.get()), {});
-                }
+                self.pointer.emplace(wl_seat_get_pointer(self.seat.get()), self.glue.pointer_glue);
             } else {
                 self.pointer.reset();
             }
         }
-        if constexpr(SeatKeyboardGlue<KeyboardGlue>) {
+        if constexpr(GlueWithSeatKeyboardGlue<SeatGlue>) {
             if(cap & WL_SEAT_CAPABILITY_KEYBOARD) {
                 static_assert(version >= WL_SEAT_GET_KEYBOARD_SINCE_VERSION);
-                if constexpr(GlueWithSeatKeyboardGlue<SeatGlue>) {
-                    self.keyboard.emplace(wl_seat_get_keyboard(self.seat.get()), self.glue.keyboard_glue);
-                } else {
-                    self.keyboard.emplace(wl_seat_get_keyboard(self.seat.get()), {});
-                }
+                self.keyboard.emplace(wl_seat_get_keyboard(self.seat.get()), self.glue.keyboard_glue);
             } else {
                 self.keyboard.reset();
             }
@@ -352,7 +338,13 @@ class Seat {
 
     static auto name(void* const /*data*/, wl_seat* const /*wl_seat*/, const char* const /*name*/) -> void {}
 
-    wl_seat_listener listener = {capabilities, name};
+    static inline wl_seat_listener listener = {capabilities, name};
+
+    uint32_t id;
+
+    [[no_unique_address]] SeatGlue                                                                                                             glue;
+    [[no_unique_address]] std::conditional_t<GlueWithSeatPointerGlue<SeatGlue>, std::optional<Pointer<decltype(glue.pointer_glue)>>, Empty>    pointer;
+    [[no_unique_address]] std::conditional_t<GlueWithSeatKeyboardGlue<SeatGlue>, std::optional<Keyboard<decltype(glue.keyboard_glue)>>, Empty> keyboard;
 
   public:
     static auto info() -> internal::InterfaceInfo {

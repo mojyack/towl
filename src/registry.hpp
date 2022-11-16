@@ -22,10 +22,6 @@ class Registry {
     };
 
     std::unique_ptr<wl_registry, Deleter> registry;
-    GlueParameter                         parameter;
-
-    using InterfaceArrays = std::tuple<std::vector<Interfaces>...>;
-    InterfaceArrays interface_arrays;
 
     static auto global_callback(void* const data, wl_registry* const /*registry*/, const uint32_t id, const char* const interface, const uint32_t version) -> void {
         auto& self = *reinterpret_cast<Registry*>(data);
@@ -38,6 +34,11 @@ class Registry {
     }
 
     static inline wl_registry_listener listener = {global_callback, remove_callback};
+
+    GlueParameter parameter;
+
+    using InterfaceArrays = std::tuple<std::vector<Interfaces>...>;
+    InterfaceArrays interface_arrays;
 
     template <size_t n = 0>
     auto bind_interface(const char* const name, const uint32_t version, const uint32_t id) -> void {
@@ -119,7 +120,7 @@ class Registry {
         return ensure_interfaces<0>();
     }
 
-    Registry(wl_registry* const registry, GlueParameter&& parameter) : registry(registry), parameter(std::move(parameter)) {
+    Registry(wl_registry* const registry, GlueParameter parameter) : registry(registry), parameter(std::move(parameter)) {
         wl_registry_add_listener(registry, &listener, this);
     }
 };

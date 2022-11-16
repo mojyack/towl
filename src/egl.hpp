@@ -17,6 +17,7 @@ class EGLWindow {
             wl_egl_window_destroy(egl_window);
         }
     };
+
     std::unique_ptr<wl_egl_window, Deleter> egl_window;
 
   public:

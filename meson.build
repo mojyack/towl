@@ -1,4 +1,4 @@
-project('towl', ['cpp', 'c'], version : '1.0.4', default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++20'])
+project('towl', ['cpp', 'c'], version : '1.0.5', default_options : ['warning_level=3', 'werror=true', 'cpp_std=c++20'])
 
 wayland_client    = dependency('wayland-client')
 wayland_cursor    = dependency('wayland-cursor')

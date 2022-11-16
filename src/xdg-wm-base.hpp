@@ -12,19 +12,20 @@ namespace TOWL_NS {
 
 template <class Glue>
 concept WMBaseXDGToplevelOnConfigure = requires(Glue& m, int32_t width, int32_t height) {
-    {m.on_configure(width, height)};
-};
+                                           { m.on_configure(width, height) };
+                                       };
 
 template <class Glue>
 concept WMBaseXDGToplevelOnClose = requires(Glue& m) {
-    {m.on_close()};
-};
+                                       { m.on_close() };
+                                   };
 
 template <class Glue>
 concept WMBaseXDGToplevelGlue =
     (WMBaseXDGToplevelOnConfigure<Glue> ||
      WMBaseXDGToplevelOnClose<Glue> ||
-     IsEmpty<Glue>)&&std::movable<Glue>;
+     IsEmpty<Glue>) &&
+    std::movable<Glue>;
 
 // version = 1 ~ 4
 template <uint32_t version>
@@ -41,8 +42,6 @@ class WMBase {
         };
 
         std::unique_ptr<xdg_toplevel, Deleter> toplevel;
-
-        [[no_unique_address]] std::conditional_t<!IsEmpty<XDGToplevelGlue>, XDGToplevelGlue, Empty> glue;
 
         static auto configure(void* const data, xdg_toplevel* const /*toplevel*/, const int32_t width, const int32_t height, wl_array* const /*states*/) -> void {
             if constexpr(WMBaseXDGToplevelOnConfigure<XDGToplevelGlue>) {
@@ -62,7 +61,9 @@ class WMBase {
 
         static auto bounds(void* const /*data*/, xdg_toplevel* const /*toplevel*/, const int32_t /*width*/, const int32_t /*height*/) -> void {}
 
-        static inline auto listener = xdg_toplevel_listener{configure, close, bounds};
+        static inline xdg_toplevel_listener listener = {configure, close, bounds};
+
+        [[no_unique_address]] XDGToplevelGlue glue;
 
       public:
         auto set_title(const char* const title) -> void {
@@ -91,8 +92,6 @@ class WMBase {
 
         std::unique_ptr<xdg_surface, Deleter> surface;
 
-        bool configured = false;
-
         static auto configure(void* const data, xdg_surface* const surface, const uint32_t serial) -> void {
             auto& self = *reinterpret_cast<XDGSurface*>(data);
 
@@ -103,6 +102,8 @@ class WMBase {
         }
 
         static inline xdg_surface_listener listener = {configure};
+
+        bool configured = false;
 
       public:
         template <WMBaseXDGToplevelGlue Glue>
@@ -132,7 +133,6 @@ class WMBase {
     };
 
     std::unique_ptr<xdg_wm_base, Deleter> wm_base;
-    uint32_t                              id;
 
     static auto ping(void* const /*data*/, xdg_wm_base* const wm_base, const uint32_t serial) -> void {
         static_assert(version >= XDG_WM_BASE_PONG_SINCE_VERSION);
@@ -140,6 +140,8 @@ class WMBase {
     }
 
     static inline xdg_wm_base_listener listener = {ping};
+
+    uint32_t id;
 
   public:
     static auto info() -> internal::InterfaceInfo {

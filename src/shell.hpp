@@ -23,8 +23,6 @@ class Shell {
 
         std::unique_ptr<wl_shell_surface, Deleter> shell_surface;
 
-        std::function<void(int32_t, int32_t)> on_configure;
-
         static auto ping(void* const /*data*/, wl_shell_surface* const shell_surface, const uint32_t serial) -> void {
             wl_shell_surface_pong(shell_surface, serial);
         }
@@ -39,6 +37,8 @@ class Shell {
         static auto popup_done(void* /*data*/, struct wl_shell_surface* /*shell_surface*/) -> void {}
 
         static inline wl_shell_surface_listener listener = {ping, configure, popup_done};
+
+        std::function<void(int32_t, int32_t)> on_configure;
 
       public:
         auto set_configure_callback(std::function<void(int32_t, int32_t)> callback) {
@@ -62,7 +62,8 @@ class Shell {
     };
 
     std::unique_ptr<wl_shell, Deleter> shell;
-    uint32_t                           id;
+
+    uint32_t id;
 
   public:
     static auto info() -> internal::InterfaceInfo {
