@@ -56,6 +56,11 @@ concept SeatPointerOnAxisDiscrete = requires(Glue& m, uint32_t axis, int32_t dis
                                     };
 
 template <class Glue>
+concept SeatPointerOnAxisValue120 = requires(Glue& m, uint32_t axis, int32_t value120) {
+                                        m.on_axis_value120(axis, value120);
+                                    };
+
+template <class Glue>
 concept SeatPointerGlue =
     SeatPointerOnEnter<Glue> ||
     SeatPointerOnLeave<Glue> ||
@@ -125,7 +130,7 @@ concept SeatGlue =
      IsEmpty<Glue>) &&
     std::movable<Glue>;
 
-// version = 1 ~ 7
+// version = 1 ~ 8
 template <uint32_t version, SeatGlue SeatGlue>
 class Seat {
   public:
@@ -207,7 +212,14 @@ class Seat {
             }
         }
 
-        static inline wl_pointer_listener listener = {enter, leave, motion, button, axis, frame, axis_source, axis_stop, axis_descrete};
+        static auto axis_value120(void* const data, wl_pointer* const /*pointer*/, const uint32_t axis, const int32_t value120) -> void {
+            if constexpr(SeatPointerOnAxisValue120<PointerGlue>) {
+                auto& self = *reinterpret_cast<Pointer*>(data);
+                self.glue->on_axis_descrete(axis, value120);
+            }
+        }
+
+        static inline wl_pointer_listener listener = {enter, leave, motion, button, axis, frame, axis_source, axis_stop, axis_descrete, axis_value120};
 
         PointerGlue* glue;
 
@@ -222,6 +234,7 @@ class Seat {
             static_assert(!(SeatPointerOnAxisSource<PointerGlue> && version < WL_POINTER_AXIS_SOURCE_SINCE_VERSION));
             static_assert(!(SeatPointerOnAxisStop<PointerGlue> && version < WL_POINTER_AXIS_STOP_SINCE_VERSION));
             static_assert(!(SeatPointerOnAxisDiscrete<PointerGlue> && version < WL_POINTER_AXIS_DISCRETE_SINCE_VERSION));
+            static_assert(!(SeatPointerOnAxisValue120<PointerGlue> && version < WL_POINTER_AXIS_VALUE120_SINCE_VERSION));
 
             assert(pointer);
             wl_pointer_add_listener(pointer, &listener, this);

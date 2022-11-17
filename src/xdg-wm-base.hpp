@@ -27,7 +27,7 @@ concept WMBaseXDGToplevelGlue =
      IsEmpty<Glue>) &&
     std::movable<Glue>;
 
-// version = 1 ~ 4
+// version = 1 ~ 5
 template <uint32_t version>
 class WMBase {
   public:
@@ -61,7 +61,9 @@ class WMBase {
 
         static auto bounds(void* const /*data*/, xdg_toplevel* const /*toplevel*/, const int32_t /*width*/, const int32_t /*height*/) -> void {}
 
-        static inline xdg_toplevel_listener listener = {configure, close, bounds};
+        static auto capabilities(void* const /*data*/, xdg_toplevel* const /*toplevel*/, wl_array* const /*capabilities*/) -> void{};
+
+        static inline xdg_toplevel_listener listener = {configure, close, bounds, capabilities};
 
         [[no_unique_address]] XDGToplevelGlue glue;
 
