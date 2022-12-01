@@ -94,28 +94,22 @@ class WMBase {
 
         std::unique_ptr<xdg_surface, Deleter> surface;
 
-        static auto configure(void* const data, xdg_surface* const surface, const uint32_t serial) -> void {
-            auto& self = *reinterpret_cast<XDGSurface*>(data);
-
-            self.configured = true;
-
+        static auto configure(void* const /*data*/, xdg_surface* const surface, const uint32_t serial) -> void {
             static_assert(version >= XDG_SURFACE_ACK_CONFIGURE_SINCE_VERSION);
+
+            // NOTE
+            // ack should be called after rendering to the buffer is complete.
+            // however, we did not find any problems with calling ack here and decided to call it here to increase responsiveness.
             xdg_surface_ack_configure(surface, serial);
         }
 
         static inline xdg_surface_listener listener = {configure};
-
-        bool configured = false;
 
       public:
         template <WMBaseXDGToplevelGlue Glue>
         auto create_xdg_toplevel(Glue&& glue) -> XDGToplevel<Glue> {
             static_assert(version >= XDG_SURFACE_GET_TOPLEVEL_SINCE_VERSION);
             return XDGToplevel<Glue>(xdg_surface_get_toplevel(surface.get()), std::move(glue));
-        }
-
-        auto is_configured() const -> bool {
-            return configured;
         }
 
         XDGSurface(xdg_surface* const surface) : surface(surface) {
