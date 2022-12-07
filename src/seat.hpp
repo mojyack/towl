@@ -151,70 +151,70 @@ class Seat {
 
         static auto enter(void* const data, wl_pointer* const /*pointer*/, const uint32_t /*serial*/, wl_surface* const surface, const wl_fixed_t x, const wl_fixed_t y) -> void {
             if constexpr(SeatPointerOnEnter<PointerGlue>) {
-                auto& self = *reinterpret_cast<Pointer*>(data);
-                self.glue->on_enter(reinterpret_cast<SurfaceTag>(surface), x / 256, y / 256);
+                auto& self = *std::bit_cast<Pointer*>(data);
+                self.glue->on_enter(std::bit_cast<SurfaceTag>(surface), x / 256, y / 256);
             }
         }
 
         static auto leave(void* const data, wl_pointer* const /*pointer*/, const uint32_t /*serial*/, wl_surface* const surface) -> void {
             if constexpr(SeatPointerOnLeave<PointerGlue>) {
-                auto& self = *reinterpret_cast<Pointer*>(data);
-                self.glue->on_leave(reinterpret_cast<SurfaceTag>(surface));
+                auto& self = *std::bit_cast<Pointer*>(data);
+                self.glue->on_leave(std::bit_cast<SurfaceTag>(surface));
             }
         }
 
         static auto motion(void* const data, wl_pointer* const /*pointer*/, const uint32_t /*time*/, const wl_fixed_t x, const wl_fixed_t y) -> void {
             if constexpr(SeatPointerOnMotion<PointerGlue>) {
-                auto& self = *reinterpret_cast<Pointer*>(data);
+                auto& self = *std::bit_cast<Pointer*>(data);
                 self.glue->on_motion(x / 256, y / 256);
             }
         }
 
         static auto button(void* const data, wl_pointer* const /*pointer*/, const uint32_t /*serial*/, const uint32_t /*time*/, const uint32_t button, const uint32_t state) -> void {
             if constexpr(SeatPointerOnButton<PointerGlue>) {
-                auto& self = *reinterpret_cast<Pointer*>(data);
+                auto& self = *std::bit_cast<Pointer*>(data);
                 self.glue->on_button(button, state);
             }
         }
 
         static auto axis(void* const data, wl_pointer* const /*pointer*/, const uint32_t /*time*/, const uint32_t axis, const wl_fixed_t value) -> void {
             if constexpr(SeatPointerOnAxis<PointerGlue>) {
-                auto& self = *reinterpret_cast<Pointer*>(data);
+                auto& self = *std::bit_cast<Pointer*>(data);
                 self.glue->on_axis(axis, value / 256);
             }
         }
 
         static auto frame(void* const data, wl_pointer* const /*pointer*/) -> void {
             if constexpr(SeatPointerOnFrame<PointerGlue>) {
-                auto& self = *reinterpret_cast<Pointer*>(data);
+                auto& self = *std::bit_cast<Pointer*>(data);
                 self.glue->on_frame();
             }
         }
 
         static auto axis_source(void* const data, wl_pointer* const /*pointer*/, const uint32_t axis_source) -> void {
             if constexpr(SeatPointerOnAxisSource<PointerGlue>) {
-                auto& self = *reinterpret_cast<Pointer*>(data);
+                auto& self = *std::bit_cast<Pointer*>(data);
                 self.glue->on_axis_source(axis_source);
             }
         }
 
         static auto axis_stop(void* const data, wl_pointer* const /*pointer*/, const uint32_t /*time*/, const uint32_t axis) -> void {
             if constexpr(SeatPointerOnAxisStop<PointerGlue>) {
-                auto& self = *reinterpret_cast<Pointer*>(data);
+                auto& self = *std::bit_cast<Pointer*>(data);
                 self.glue->on_axis_stop(axis);
             }
         }
 
         static auto axis_descrete(void* const data, wl_pointer* const /*pointer*/, const uint32_t axis, const int32_t descrete) -> void {
             if constexpr(SeatPointerOnAxisDiscrete<PointerGlue>) {
-                auto& self = *reinterpret_cast<Pointer*>(data);
+                auto& self = *std::bit_cast<Pointer*>(data);
                 self.glue->on_axis_descrete(axis, descrete);
             }
         }
 
         static auto axis_value120(void* const data, wl_pointer* const /*pointer*/, const uint32_t axis, const int32_t value120) -> void {
             if constexpr(SeatPointerOnAxisValue120<PointerGlue>) {
-                auto& self = *reinterpret_cast<Pointer*>(data);
+                auto& self = *std::bit_cast<Pointer*>(data);
                 self.glue->on_axis_descrete(axis, value120);
             }
         }
@@ -258,42 +258,42 @@ class Seat {
 
         static auto keymap(void* const data, wl_keyboard* const /*wl_keyboard*/, const uint32_t format, const int32_t fd, const uint32_t size) -> void {
             if constexpr(SeatKeyboardOnKeymap<KeyboardGlue>) {
-                auto& self = *reinterpret_cast<Keyboard*>(data);
+                auto& self = *std::bit_cast<Keyboard*>(data);
                 self.glue->on_keymap(format, fd, size);
             }
         }
 
         static auto enter(void* const data, wl_keyboard* const /*wl_keyboard*/, const uint32_t /*serial*/, wl_surface* const surface, wl_array* const keys) -> void {
             if constexpr(SeatKeyboardOnEnter<KeyboardGlue>) {
-                auto& self = *reinterpret_cast<Keyboard*>(data);
-                self.glue->on_enter(reinterpret_cast<SurfaceTag>(surface), Array<uint32_t>(*keys));
+                auto& self = *std::bit_cast<Keyboard*>(data);
+                self.glue->on_enter(std::bit_cast<SurfaceTag>(surface), Array<uint32_t>(*keys));
             }
         }
 
         static auto leave(void* const data, wl_keyboard* const /*wl_keyboard*/, const uint32_t /*serial*/, wl_surface* const surface) -> void {
             if constexpr(SeatKeyboardOnLeave<KeyboardGlue>) {
-                auto& self = *reinterpret_cast<Keyboard*>(data);
-                self.glue->on_leave(reinterpret_cast<SurfaceTag>(surface));
+                auto& self = *std::bit_cast<Keyboard*>(data);
+                self.glue->on_leave(std::bit_cast<SurfaceTag>(surface));
             }
         }
 
         static auto key(void* const data, wl_keyboard* const /*wl_keyboard*/, const uint32_t /*serial*/, const uint32_t /*time*/, const uint32_t key, const uint32_t state) -> void {
             if constexpr(SeatKeyboardOnKey<KeyboardGlue>) {
-                auto& self = *reinterpret_cast<Keyboard*>(data);
+                auto& self = *std::bit_cast<Keyboard*>(data);
                 self.glue->on_key(key, state);
             }
         }
 
         static auto modifiers(void* data, wl_keyboard* const /*wl_keyboard*/, const uint32_t /*serial*/, const uint32_t mods_depressed, const uint32_t mods_latched, uint32_t mods_locked, uint32_t group) -> void {
             if constexpr(SeatKeyboardOnModifiers<KeyboardGlue>) {
-                auto& self = *reinterpret_cast<Keyboard*>(data);
+                auto& self = *std::bit_cast<Keyboard*>(data);
                 self.glue->on_modifiers(mods_depressed, mods_latched, mods_locked, group);
             }
         }
 
         static auto repeat_info(void* const data, wl_keyboard* const /*wl_keyboard*/, const int32_t rate, const int32_t delay) {
             if constexpr(SeatKeyboardOnRepeatInfo<KeyboardGlue>) {
-                auto& self = *reinterpret_cast<Keyboard*>(data);
+                auto& self = *std::bit_cast<Keyboard*>(data);
                 self.glue->on_repeat_info(rate, delay);
             }
         }
@@ -330,7 +330,7 @@ class Seat {
     std::unique_ptr<wl_seat, Deleter> seat;
 
     static auto capabilities(void* const data, wl_seat* const /*seat*/, const uint32_t cap) -> void {
-        auto& self = *reinterpret_cast<Seat*>(data);
+        auto& self = *std::bit_cast<Seat*>(data);
         if constexpr(GlueWithSeatPointerGlue<SeatGlue>) {
             if(cap & WL_SEAT_CAPABILITY_POINTER) {
                 static_assert(version >= WL_SEAT_GET_POINTER_SINCE_VERSION);
@@ -368,7 +368,7 @@ class Seat {
         return id;
     }
 
-    Seat(void* const data, const uint32_t id, SeatGlue glue) : seat(reinterpret_cast<wl_seat*>(data)), id(id), glue(std::move(glue)) {
+    Seat(void* const data, const uint32_t id, SeatGlue glue) : seat(std::bit_cast<wl_seat*>(data)), id(id), glue(std::move(glue)) {
         static_assert(version >= WL_SEAT_CAPABILITIES_SINCE_VERSION);
         static_assert(version >= WL_SEAT_NAME_SINCE_VERSION);
 

@@ -80,7 +80,7 @@ class Shm {
         return wl_shm_create_pool(shm.get(), posix_shm, size);
     }
 
-    Shm(void* const data, const uint32_t id) : shm(reinterpret_cast<wl_shm*>(data)), id(id) {}
+    Shm(void* const data, const uint32_t id) : shm(std::bit_cast<wl_shm*>(data)), id(id) {}
 };
 
 #ifdef TOWL_NS

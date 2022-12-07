@@ -41,10 +41,10 @@ class Output {
     static auto done(void* const /*data*/, wl_output* const /*wl_output*/) {}
 
     static auto scale(void* const data, wl_output* const /*wl_output*/, const int32_t factor) {
-        auto& self          = *reinterpret_cast<Output*>(data);
+        auto& self          = *std::bit_cast<Output*>(data);
         self.scaling_factor = factor;
         if constexpr(OutputOnScale<OutputGlue>) {
-            self.glue.on_scale(reinterpret_cast<OutputTag>(self.output.get()), factor);
+            self.glue.on_scale(std::bit_cast<OutputTag>(self.output.get()), factor);
         }
     }
 
@@ -69,11 +69,11 @@ class Output {
     }
 
     auto as_tag() const -> OutputTag {
-        return reinterpret_cast<size_t>(output.get());
+        return std::bit_cast<size_t>(output.get());
     }
 
     static auto from_tag(const OutputTag output) -> Output& {
-        return *reinterpret_cast<Output*>(wl_output_get_user_data(reinterpret_cast<wl_output*>(output)));
+        return *std::bit_cast<Output*>(wl_output_get_user_data(std::bit_cast<wl_output*>(output)));
     }
 
     auto get_scale() const -> int32_t {
@@ -81,10 +81,10 @@ class Output {
     }
 
     auto operator==(const OutputTag tag) const -> bool {
-        return output.get() == reinterpret_cast<wl_output*>(tag);
+        return output.get() == std::bit_cast<wl_output*>(tag);
     }
 
-    Output(void* const data, const uint32_t id, OutputGlue glue) : output(reinterpret_cast<wl_output*>(data)), id(id), glue(std::move(glue)) {
+    Output(void* const data, const uint32_t id, OutputGlue glue) : output(std::bit_cast<wl_output*>(data)), id(id), glue(std::move(glue)) {
         // static_assert(!(OutputOnGeometry<OutputGlue> && version < WL_OUTPUT_GEOMETRY_SINCE_VERSION));
         // static_assert(!(OutputOnMode<OutputGlue> && version < WL_OUTPUT_MODE_SINCE_VERSION));
         // static_assert(!(OutputOnDone<OutputGlue> && version < WL_OUTPUT_DONE_SINCE_VERSION));

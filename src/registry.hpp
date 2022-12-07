@@ -24,12 +24,12 @@ class Registry {
     std::unique_ptr<wl_registry, Deleter> registry;
 
     static auto global_callback(void* const data, wl_registry* const /*registry*/, const uint32_t id, const char* const interface, const uint32_t version) -> void {
-        auto& self = *reinterpret_cast<Registry*>(data);
+        auto& self = *std::bit_cast<Registry*>(data);
         self.bind_interface(interface, version, id);
     }
 
     static auto remove_callback(void* const data, wl_registry* const /*registry*/, const uint32_t id) -> void {
-        auto& self = *reinterpret_cast<Registry*>(data);
+        auto& self = *std::bit_cast<Registry*>(data);
         self.unbind_interface(id);
     }
 

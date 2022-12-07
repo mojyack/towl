@@ -59,15 +59,15 @@ class Compositor {
 
         static auto enter(void* const data, wl_surface* const /*surface*/, wl_output* const output) -> void {
             if constexpr(CompositorSurfaceEnter<SurfaceGlue>) {
-                auto& self = *reinterpret_cast<Surface*>(data);
-                self.glue.on_enter(reinterpret_cast<OutputTag>(output));
+                auto& self = *std::bit_cast<Surface*>(data);
+                self.glue.on_enter(std::bit_cast<OutputTag>(output));
             }
         }
 
         static auto leave(void* const data, wl_surface* const /*surface*/, wl_output* const output) -> void {
             if constexpr(CompositorSurfaceEnter<SurfaceGlue>) {
-                auto& self = *reinterpret_cast<Surface*>(data);
-                self.glue.on_leave(reinterpret_cast<OutputTag>(output));
+                auto& self = *std::bit_cast<Surface*>(data);
+                self.glue.on_leave(std::bit_cast<OutputTag>(output));
             }
         }
 
@@ -75,7 +75,7 @@ class Compositor {
 
         static auto done(void* const data, wl_callback* const /*wl_callback*/, const uint32_t /*callback_data*/) -> void {
             if constexpr(CompositorSurfaceFrame<SurfaceGlue>) {
-                auto& self = *reinterpret_cast<Surface*>(data);
+                auto& self = *std::bit_cast<Surface*>(data);
                 self.frame.reset();
                 self.glue.on_frame();
             }
@@ -120,11 +120,11 @@ class Compositor {
         }
 
         auto as_tag() const -> SurfaceTag {
-            return reinterpret_cast<size_t>(surface.get());
+            return std::bit_cast<size_t>(surface.get());
         }
 
         auto operator==(const SurfaceTag tag) const -> bool {
-            return surface.get() == reinterpret_cast<wl_surface*>(tag);
+            return surface.get() == std::bit_cast<wl_surface*>(tag);
         }
 
         Surface(wl_surface* const surface, SurfaceGlue glue) : surface(surface), glue(std::move(glue)) {
@@ -162,7 +162,7 @@ class Compositor {
         return {wl_compositor_create_surface(compositor.get()), std::move(glue)};
     }
 
-    Compositor(void* const data, const uint32_t id) : compositor(reinterpret_cast<wl_compositor*>(data)), id(id) {}
+    Compositor(void* const data, const uint32_t id) : compositor(std::bit_cast<wl_compositor*>(data)), id(id) {}
 };
 
 #ifdef TOWL_NS

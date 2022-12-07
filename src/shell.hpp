@@ -28,7 +28,7 @@ class Shell {
         }
 
         static auto configure(void* const data, wl_shell_surface* const /*shell_surface*/, const uint32_t /*edges*/, const int32_t width, const int32_t height) -> void {
-            auto& self = *reinterpret_cast<ShellSurface*>(data);
+            auto& self = *std::bit_cast<ShellSurface*>(data);
             if(self.on_configure) {
                 self.on_configure(width, height);
             }
@@ -79,7 +79,7 @@ class Shell {
         return {wl_shell_get_shell_surface(shell, surface.native()), toplevel};
     }
 
-    Shell(void* const data, const uint32_t id) : shell(reinterpret_cast<wl_shell*>(data)), id(id) {}
+    Shell(void* const data, const uint32_t id) : shell(std::bit_cast<wl_shell*>(data)), id(id) {}
 };
 
 #ifdef TOWL_NS

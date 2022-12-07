@@ -46,7 +46,7 @@ class WMBase {
         static auto configure(void* const data, xdg_toplevel* const /*toplevel*/, const int32_t width, const int32_t height, wl_array* const /*states*/) -> void {
             if constexpr(WMBaseXDGToplevelOnConfigure<XDGToplevelGlue>) {
                 if((width != 0 && height != 0)) {
-                    auto& self = *reinterpret_cast<XDGToplevel*>(data);
+                    auto& self = *std::bit_cast<XDGToplevel*>(data);
                     self.glue.on_configure(width, height);
                 }
             }
@@ -54,7 +54,7 @@ class WMBase {
 
         static auto close(void* const data, xdg_toplevel* const /*toplevel*/) -> void {
             if constexpr(WMBaseXDGToplevelOnClose<XDGToplevelGlue>) {
-                auto& self = *reinterpret_cast<XDGToplevel*>(data);
+                auto& self = *std::bit_cast<XDGToplevel*>(data);
                 self.glue.on_close();
             }
         }
@@ -153,7 +153,7 @@ class WMBase {
         return {xdg_wm_base_get_xdg_surface(wm_base.get(), surface.native())};
     }
 
-    WMBase(void* const data, const uint32_t id) : wm_base(reinterpret_cast<xdg_wm_base*>(data)), id(id) {
+    WMBase(void* const data, const uint32_t id) : wm_base(std::bit_cast<xdg_wm_base*>(data)), id(id) {
         static_assert(version >= XDG_WM_BASE_PING_SINCE_VERSION);
         xdg_wm_base_add_listener(wm_base.get(), &listener, this);
     }

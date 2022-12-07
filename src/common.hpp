@@ -1,4 +1,6 @@
 #pragma once
+#include <bit>
+
 #include <wayland-client.h>
 
 #ifdef TOWL_NS
@@ -15,7 +17,7 @@ struct Array {
     size_t size;
     T*     data;
 
-    Array(const wl_array& array) : size(array.size / sizeof(T)), data(reinterpret_cast<T*>(array.data)) {}
+    Array(const wl_array& array) : size(array.size / sizeof(T)), data(std::bit_cast<T*>(array.data)) {}
 };
 
 struct Empty {};

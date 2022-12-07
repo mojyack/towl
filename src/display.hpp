@@ -52,7 +52,7 @@ class Display {
     std::unique_ptr<wl_display, Deleter> display;
 
     static auto done(void* const data, wl_callback* const callback, const uint32_t /*time*/) -> void {
-        auto& flag = *reinterpret_cast<std::atomic_flag*>(data);
+        auto& flag = *std::bit_cast<std::atomic_flag*>(data);
         flag.test_and_set();
         flag.notify_one();
 
