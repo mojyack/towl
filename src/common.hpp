@@ -20,7 +20,12 @@ struct Array {
     Array(const wl_array& array) : size(array.size / sizeof(T)), data(std::bit_cast<T*>(array.data)) {}
 };
 
-struct Empty {};
+struct Empty {
+    Empty() {}
+
+    template <class... Args>
+    Empty(Args&&...) {}
+};
 
 template <class T>
 concept IsEmpty = std::is_same_v<T, Empty>;

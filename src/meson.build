@@ -4,6 +4,8 @@ towl_headers = files(
     'display.hpp',
     'egl.hpp',
     'internal.hpp',
+    'keyboard.hpp',
+    'mouse.hpp',
     'output.hpp',
     'registry.hpp',
     'seat.hpp',
