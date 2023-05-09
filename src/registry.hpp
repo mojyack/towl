@@ -37,14 +37,17 @@ class Registry {
 
     GlueParameter parameter;
 
-    using InterfaceArrays = std::tuple<std::vector<Interfaces>...>;
+    template <class Interface>
+    using InterfaceArray = std::vector<std::unique_ptr<Interface>>;
+
+    using InterfaceArrays = std::tuple<InterfaceArray<Interfaces>...>;
     InterfaceArrays interface_arrays;
 
     template <size_t n = 0>
     auto bind_interface(const char* const name, const uint32_t version, const uint32_t id) -> void {
         if constexpr(n < std::tuple_size_v<InterfaceArrays>) {
             auto& interface_array = std::get<n>(interface_arrays);
-            using Interface       = typename std::remove_reference_t<decltype(interface_array)>::value_type;
+            using Interface       = typename std::remove_reference_t<decltype(interface_array)>::value_type::element_type;
             const auto info       = Interface::info();
             if(std::strcmp(info.name, name) != 0) {
                 bind_interface<n + 1>(name, version, id);
@@ -54,9 +57,9 @@ class Registry {
                 panic("application requires version ", info.version, " of ", info.name, ", but server provides version ", version, ".");
             }
             if constexpr(std::is_constructible_v<Interface, void*, uint32_t, GlueParameter&>) {
-                interface_array.emplace_back(wl_registry_bind(registry.get(), id, info.structure, info.version), id, parameter);
+                interface_array.emplace_back(new Interface(wl_registry_bind(registry.get(), id, info.structure, info.version), id, parameter));
             } else {
-                interface_array.emplace_back(wl_registry_bind(registry.get(), id, info.structure, info.version), id);
+                interface_array.emplace_back(new Interface(wl_registry_bind(registry.get(), id, info.structure, info.version), id));
             }
         }
     }
@@ -66,7 +69,7 @@ class Registry {
         if constexpr(n < std::tuple_size_v<InterfaceArrays>) {
             auto& interface_array = std::get<n>(interface_arrays);
             for(auto i = interface_array.begin(); i < interface_array.end(); i += 1) {
-                if(id == i->interface_id()) {
+                if(id == (*i)->interface_id()) {
                     interface_array.erase(i);
                     return;
                 }
@@ -76,10 +79,10 @@ class Registry {
     }
 
     template <size_t n, class Interface>
-    auto find_interface_array() -> std::vector<Interface>& {
+    auto find_interface_array() -> InterfaceArray<Interface>& {
         if constexpr(n < std::tuple_size_v<InterfaceArrays>) {
             auto& interface_array = std::get<n>(interface_arrays);
-            using Current         = typename std::remove_reference_t<decltype(interface_array)>::value_type;
+            using Current         = typename std::remove_reference_t<decltype(interface_array)>::value_type::element_type;
             if constexpr(std::is_same_v<Current, Interface>) {
                 return interface_array;
             } else {
@@ -112,7 +115,7 @@ class Registry {
 
   public:
     template <class T>
-    auto interface() -> std::vector<T>& {
+    auto interface() -> InterfaceArray<T>& {
         return find_interface_array<0, T>();
     }
 
