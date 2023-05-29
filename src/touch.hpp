@@ -20,7 +20,7 @@ concept TouchOnUp = requires(Glue& m, const uint32_t id) {
 
 template <class Glue>
 concept TouchOnMotion = requires(Glue& m, const uint32_t id, double x, double y) {
-                            m.on_down(id, x, y);
+                            m.on_motion(id, x, y);
                         };
 
 template <class Glue>
