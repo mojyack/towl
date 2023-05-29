@@ -7,13 +7,14 @@
 #include "internal.hpp"
 #include "keyboard.hpp"
 #include "mouse.hpp"
+#include "touch.hpp"
 
 #ifdef TOWL_NS
 namespace TOWL_NS {
 #endif
 
 // version = 1 ~ 8
-template <uint32_t version, KeyboardGlue KeyboardGlue, PointerGlue PointerGlue>
+template <uint32_t version, KeyboardGlue KeyboardGlue, PointerGlue PointerGlue, TouchGlue TouchGlue>
 class Seat {
   private:
     struct Deleter {
@@ -46,6 +47,14 @@ class Seat {
                 self.pointer.reset();
             }
         }
+        if constexpr(!IsEmpty<TouchGlue>) {
+            if(cap & WL_SEAT_CAPABILITY_TOUCH) {
+                static_assert(version >= WL_SEAT_GET_TOUCH_SINCE_VERSION);
+                self.touch.emplace(wl_seat_get_touch(self.seat.get()), self.touch_glue);
+            } else {
+                self.touch.reset();
+            }
+        }
     }
 
     static auto name(void* const /*data*/, wl_seat* const /*wl_seat*/, const char* const /*name*/) -> void {}
@@ -56,11 +65,14 @@ class Seat {
 
     using KeyboardOpt = std::optional<Keyboard<version, KeyboardGlue>>;
     using PointerOpt  = std::optional<Pointer<version, PointerGlue>>;
+    using TouchOpt    = std::optional<Touch<version, TouchGlue>>;
 
     [[no_unique_address]] KeyboardGlue                                                   keyboard_glue;
     [[no_unique_address]] PointerGlue                                                    pointer_glue;
+    [[no_unique_address]] TouchGlue                                                      touch_glue;
     [[no_unique_address]] std::conditional_t<!IsEmpty<KeyboardGlue>, KeyboardOpt, Empty> keyboard;
     [[no_unique_address]] std::conditional_t<!IsEmpty<PointerGlue>, PointerOpt, Empty>   pointer;
+    [[no_unique_address]] std::conditional_t<!IsEmpty<TouchGlue>, TouchOpt, Empty>       touch;
 
   public:
     static auto info() -> internal::InterfaceInfo {
@@ -75,7 +87,8 @@ class Seat {
         : seat(std::bit_cast<wl_seat*>(data)),
           id(id),
           keyboard_glue(glue_param),
-          pointer_glue(glue_param) {
+          pointer_glue(glue_param),
+          touch_glue(glue_param) {
         static_assert(version >= WL_SEAT_CAPABILITIES_SINCE_VERSION);
         static_assert(version >= WL_SEAT_NAME_SINCE_VERSION);
 

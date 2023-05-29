@@ -11,6 +11,7 @@ towl_headers = files(
     'seat.hpp',
     'shell.hpp',
     'shm.hpp',
+    'touch.hpp',
     'towl.hpp',
     'xdg-wm-base.hpp',
 )
