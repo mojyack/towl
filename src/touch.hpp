@@ -54,7 +54,7 @@ class Touch {
     static auto down(void* const data, wl_touch* const /*wl_touch*/, const uint32_t /*serial*/, const uint32_t /*time*/, wl_surface* const surface, const int32_t id, const wl_fixed_t x, const wl_fixed_t y) -> void {
         if constexpr(TouchOnDown<TouchGlue>) {
             auto& self = *std::bit_cast<Touch*>(data);
-            self.glue->on_down(std::bit_cast<SurfaceTag>(surface), id, x / 256.0, y / 256.0);
+            self.glue->on_down(std::bit_cast<SurfaceTag>(surface), id, wl_fixed_to_double(x), wl_fixed_to_double(y));
         }
     }
 
@@ -68,7 +68,7 @@ class Touch {
     static auto motion(void* const data, wl_touch* const /*wl_touch*/, const uint32_t /*time*/, const int32_t id, const wl_fixed_t x, const wl_fixed_t y) -> void {
         if constexpr(TouchOnMotion<TouchGlue>) {
             auto& self = *std::bit_cast<Touch*>(data);
-            self.glue->on_motion(id, x / 256.0, y / 256.0);
+            self.glue->on_motion(id, wl_fixed_to_double(x), wl_fixed_to_double(y));
         }
     }
 

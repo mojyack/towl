@@ -89,7 +89,7 @@ class Pointer {
     static auto enter(void* const data, wl_pointer* const /*pointer*/, const uint32_t /*serial*/, wl_surface* const surface, const wl_fixed_t x, const wl_fixed_t y) -> void {
         if constexpr(PointerOnEnter<PointerGlue>) {
             auto& self = *std::bit_cast<Pointer*>(data);
-            self.glue->on_enter(std::bit_cast<SurfaceTag>(surface), x / 256.0, y / 256.0);
+            self.glue->on_enter(std::bit_cast<SurfaceTag>(surface), wl_fixed_to_double(x), wl_fixed_to_double(y));
         }
     }
 
@@ -103,7 +103,7 @@ class Pointer {
     static auto motion(void* const data, wl_pointer* const /*pointer*/, const uint32_t /*time*/, const wl_fixed_t x, const wl_fixed_t y) -> void {
         if constexpr(PointerOnMotion<PointerGlue>) {
             auto& self = *std::bit_cast<Pointer*>(data);
-            self.glue->on_motion(x / 256.0, y / 256.0);
+            self.glue->on_motion(wl_fixed_to_double(x), wl_fixed_to_double(y));
         }
     }
 
@@ -117,7 +117,7 @@ class Pointer {
     static auto axis(void* const data, wl_pointer* const /*pointer*/, const uint32_t /*time*/, const uint32_t axis, const wl_fixed_t value) -> void {
         if constexpr(PointerOnAxis<PointerGlue>) {
             auto& self = *std::bit_cast<Pointer*>(data);
-            self.glue->on_axis(axis, value / 256.0);
+            self.glue->on_axis(axis, wl_fixed_to_double(value));
         }
     }
 
