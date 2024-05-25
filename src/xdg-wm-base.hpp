@@ -4,7 +4,7 @@
 
 #include "common.hpp"
 #include "internal.hpp"
-#include "protocols/xdg-shell.h"
+#include <xdg-shell.h>
 
 #ifdef TOWL_NS
 namespace TOWL_NS {
