@@ -20,6 +20,7 @@ class TouchCallbacks {
     virtual auto on_wl_touch_motion(uint32_t /*id*/, double /*x*/, double /*y*/) -> void {}
     virtual auto on_wl_touch_up(uint32_t /*id*/) -> void {}
     virtual auto on_wl_touch_frame() -> void {}
+    ~TouchCallbacks(){};
 };
 
 class Touch {

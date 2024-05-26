@@ -15,6 +15,7 @@ class XDGToplevelCallbacks {
   public:
     virtual auto on_xdg_toplevel_configure(int /*width*/, int /*height*/) -> void {}
     virtual auto on_xdg_toplevel_close() -> void {}
+    ~XDGToplevelCallbacks() {}
 };
 
 class XDGToplevel {

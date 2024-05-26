@@ -26,6 +26,7 @@ class PointerCallbacks {
     virtual auto on_wl_pointer_axis_stop(uint32_t /*axis*/) -> void {}
     virtual auto on_wl_pointer_axis_discrete(uint32_t /*axis*/, int32_t /*discrete*/) -> void {}
     virtual auto on_wl_pointer_axis_value120(uint32_t /*axis*/, int32_t /*value120*/) -> void {}
+    ~PointerCallbacks(){};
 };
 
 class Pointer {

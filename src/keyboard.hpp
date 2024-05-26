@@ -24,6 +24,7 @@ class KeyboardCallbacks {
     virtual auto on_wl_keyboard_key(uint32_t /*key*/, uint32_t /*state*/) -> void {}
     virtual auto on_wl_keyboard_modifiers(uint32_t /*mods_depressed*/, uint32_t /*mods_latched*/, uint32_t /*mods_locked*/, uint32_t /*group*/) -> void {}
     virtual auto on_wl_keyboard_repeat_info(int32_t /*rate*/, int32_t /*delay*/) -> void {}
+    ~KeyboardCallbacks(){};
 };
 
 class Keyboard {

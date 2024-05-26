@@ -17,6 +17,7 @@ class SurfaceCallbacks {
     virtual auto on_wl_surface_leave(wl_output* /*output*/) -> void {}
     virtual auto on_wl_surface_preferred_buffer_scale(int32_t /*factor*/) -> void {}
     virtual auto on_wl_surface_frame() -> void {}
+    ~SurfaceCallbacks() {}
 };
 
 class Surface {
