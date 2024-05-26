@@ -3,6 +3,7 @@ towl_files = files(
   'interface.cpp',
   'registry.cpp',
   'compositor.cpp',
+  'output.cpp',
   'seat.cpp',
   'keyboard.cpp',
   'pointer.cpp',
