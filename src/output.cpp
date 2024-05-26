@@ -17,8 +17,8 @@ auto Output::scale(void* const data, wl_output* const /*wl_output*/, const int32
 }
 
 Output::Output(void* const data, const uint32_t version, OutputCallbacks* const callbacks)
-    : callbacks(callbacks),
-      output(std::bit_cast<wl_output*>(data), {version}) {
+    : output(std::bit_cast<wl_output*>(data), {version}),
+      callbacks(callbacks) {
     wl_output_add_listener(output.get(), &listener, this);
 }
 
