@@ -1,19 +1,16 @@
-towl_headers = files(
-    'common.hpp',
-    'compositor.hpp',
-    'display.hpp',
-    'egl.hpp',
-    'internal.hpp',
-    'keyboard.hpp',
-    'mouse.hpp',
-    'output.hpp',
-    'registry.hpp',
-    'seat.hpp',
-    'shell.hpp',
-    'shm.hpp',
-    'touch.hpp',
-    'towl.hpp',
-    'xdg-wm-base.hpp',
+towl_files = files(
+  'display.cpp',
+  'interface.cpp',
+  'registry.cpp',
+  'compositor.cpp',
+  'seat.cpp',
+  'keyboard.cpp',
+  'pointer.cpp',
+  'touch.cpp',
+  'shell.cpp',
+  'shm.cpp',
+  'xdg-wm-base.cpp',
+  'egl.cpp',
 )
 
 wayland_client    = dependency('wayland-client', version: '>=1.21')
@@ -47,7 +44,7 @@ foreach p : protocols
     )
 endforeach
 
-towl_files = protocol_files + protocol_headers
+towl_files += protocol_files + protocol_headers
 towl_deps = [wayland_client, wayland_egl]
 
 egl    = dependency('egl')

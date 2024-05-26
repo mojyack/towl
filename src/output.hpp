@@ -1,102 +1,77 @@
 #pragma once
-#include <memory>
-#include <optional>
-#include <string>
+#include <wayland-client.h>
 
-#include "common.hpp"
-#include "internal.hpp"
+#include "interface.hpp"
 
-#ifdef TOWL_NS
-namespace TOWL_NS {
-#endif
+namespace towl::impl {
+struct AutoNativeOutputDeleter {
+    uint32_t version;
 
-template <class Glue>
-concept OutputOnScale = requires(Glue& m, OutputTag output, int32_t scale) {
-                            m.on_scale(output, scale);
-                        };
+    auto operator()(wl_output* output) -> void;
+};
 
-template <class Glue>
-concept OutputGlue = (OutputOnScale<Glue> || IsEmpty<Glue>) && std::movable<Glue>;
+using AutoNativeOutput = std::unique_ptr<wl_output, AutoNativeOutputDeleter>;
+} // namespace towl::impl
 
-// version = 1 ~ 4
-template <uint32_t version, OutputGlue OutputGlue>
-class Output {
+namespace towl {
+class OutputCallbacks {
+  public:
+    virtual auto on_wl_output_scale(wl_output* const /*output*/, uint32_t /*scale*/) -> void {}
+};
+
+class Output : public impl::Interface {
   private:
-    struct Deleter {
-        auto operator()(wl_output* const output) -> void {
-            if(version >= WL_OUTPUT_RELEASE_SINCE_VERSION) {
-                wl_output_release(output);
-            } else {
-                wl_output_destroy(output);
-            }
-        }
-    };
+    impl::AutoNativeOutput output;
+    OutputCallbacks*       callbacks;
 
-    std::unique_ptr<wl_output, Deleter> output;
+    static auto geometry(void* /*data*/,
+                         wl_output* /*wl_output*/,
+                         int32_t /*x*/,
+                         int32_t /*y*/,
+                         int32_t /*physical_width*/,
+                         int32_t /*physical_height*/,
+                         int32_t /*subpixel*/,
+                         const char* /*make*/,
+                         const char* /*model*/,
+                         int32_t /*transform*/) -> void {}
 
-    static auto geometry(void* const /*data*/, wl_output* const /*wl_output*/, const int32_t /*x*/, const int32_t /*y*/, const int32_t /*physical_width*/, const int32_t /*physical_height*/, const int32_t /*subpixel*/, const char* const /*make*/, const char* const /*model*/, const int32_t /*transform*/) {}
+    static auto mode(void* /*data*/,
+                     wl_output* /*wl_output*/,
+                     uint32_t /*flags*/,
+                     int32_t /*width*/,
+                     int32_t /*height*/,
+                     int32_t /*refresh*/) -> void {}
 
-    static auto mode(void* const /*data*/, wl_output* const /*wl_output*/, const uint32_t /*flags*/, const int32_t /*width*/, const int32_t /*height*/, const int32_t /*refresh*/) {}
+    static auto done(void* /*data*/,
+                     wl_output* /*wl_output*/) -> void {}
 
-    static auto done(void* const /*data*/, wl_output* const /*wl_output*/) {}
+    static auto scale(void* data,
+                      wl_output* /*wl_output*/,
+                      int32_t factor) -> void;
 
-    static auto scale(void* const data, wl_output* const /*wl_output*/, const int32_t factor) {
-        auto& self          = *std::bit_cast<Output*>(data);
-        self.scaling_factor = factor;
-        if constexpr(OutputOnScale<OutputGlue>) {
-            self.glue.on_scale(std::bit_cast<OutputTag>(self.output.get()), factor);
-        }
-    }
+    static auto name(void* /*data*/,
+                     wl_output* /*wl_output*/,
+                     const char* /*name*/) -> void {}
 
-    static auto name(void* const /*data*/, wl_output* const /*wl_output*/, const char* const /*name*/) {}
-
-    static auto description(void* const /*data*/, wl_output* /*wl_output*/, const char* const /*description*/) {}
+    static auto description(void* /*data*/,
+                            wl_output* /*wl_output*/,
+                            const char* /*description*/) -> void {}
 
     static inline wl_output_listener listener = {geometry, mode, done, scale, name, description};
 
-    uint32_t id;
-    int32_t  scaling_factor = 1;
-
-    [[no_unique_address]] OutputGlue glue;
-
   public:
-    static auto info() -> internal::InterfaceInfo {
-        return {"wl_output", version, &wl_output_interface};
-    }
-
-    auto interface_id() const -> uint32_t {
-        return id;
-    }
-
-    auto as_tag() const -> OutputTag {
-        return std::bit_cast<size_t>(output.get());
-    }
-
-    static auto from_tag(const OutputTag output) -> Output& {
-        return *std::bit_cast<Output*>(wl_output_get_user_data(std::bit_cast<wl_output*>(output)));
-    }
-
-    auto get_scale() const -> int32_t {
-        return scaling_factor;
-    }
-
-    auto operator==(const OutputTag tag) const -> bool {
-        return output.get() == std::bit_cast<wl_output*>(tag);
-    }
-
-    Output(void* const data, const uint32_t id, OutputGlue glue) : output(std::bit_cast<wl_output*>(data)), id(id), glue(std::move(glue)) {
-        // static_assert(!(OutputOnGeometry<OutputGlue> && version < WL_OUTPUT_GEOMETRY_SINCE_VERSION));
-        // static_assert(!(OutputOnMode<OutputGlue> && version < WL_OUTPUT_MODE_SINCE_VERSION));
-        // static_assert(!(OutputOnDone<OutputGlue> && version < WL_OUTPUT_DONE_SINCE_VERSION));
-        static_assert(!(OutputOnScale<OutputGlue> && version < WL_OUTPUT_SCALE_SINCE_VERSION));
-        // static_assert(!(OutputOnName<OutputGlue> && version < WL_OUTPUT_NAME_SINCE_VERSION));
-        // static_assert(!(OutputOnDescription<OutputGlue> && version < WL_OUTPUT_DESCRIPTION_SINCE_VERSION));
-
-        wl_output_add_listener(output.get(), &listener, this);
-        wl_output_set_user_data(output.get(), this);
-    }
+    Output(void* data, uint32_t version, OutputCallbacks* callbacks);
 };
 
-#ifdef TOWL_NS
-}
-#endif
+// version = 1 ~ 4
+struct OutputBinder : impl::InterfaceBinder {
+    OutputCallbacks* callbacks;
+
+    auto get_interface_description() -> const wl_interface* override;
+    auto create_interface(void* data) -> std::unique_ptr<impl::Interface> override;
+
+    OutputBinder(const uint32_t version, OutputCallbacks* callbacks)
+        : InterfaceBinder(version),
+          callbacks(callbacks) {}
+};
+} // namespace towl

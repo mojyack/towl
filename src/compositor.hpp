@@ -1,169 +1,70 @@
 #pragma once
-#include <cassert>
-#include <memory>
+#include <wayland-client.h>
 
-#include "common.hpp"
-#include "internal.hpp"
+#include "interface.hpp"
+#include "macros/autoptr.hpp"
 
-#ifdef TOWL_NS
-namespace TOWL_NS {
-#endif
+namespace towl::impl {
+declare_autoptr(NativeCompositor, wl_compositor, wl_compositor_destroy);
+declare_autoptr(NativeSurface, wl_surface, wl_surface_destroy);
+declare_autoptr(NativeCallback, wl_callback, wl_callback_destroy);
+} // namespace towl::impl
 
-template <class Glue>
-concept CompositorSurfaceEnter = requires(Glue& m, OutputTag output) {
-                                     m.on_enter(output);
-                                 };
-
-template <class Glue>
-concept CompositorSurfaceLeave = requires(Glue& m, OutputTag output) {
-                                     m.on_leave(output);
-                                 };
-
-template <class Glue>
-concept CompositorSurfaceFrame = requires(Glue& m) {
-                                     m.on_frame();
-                                 };
-
-template <class Glue>
-concept CompositorSurfaceGlue =
-    (CompositorSurfaceEnter<Glue> ||
-     CompositorSurfaceLeave<Glue> ||
-     CompositorSurfaceFrame<Glue> ||
-     IsEmpty<Glue>) &&
-    std::movable<Glue>;
-
-// version = 1 ~ 4
-template <uint32_t version>
-class Compositor {
+namespace towl {
+class SurfaceCallbacks {
   public:
-    template <CompositorSurfaceGlue SurfaceGlue>
-    class Surface {
-      private:
-        struct Deleter {
-            auto operator()(wl_surface* const surface) -> void {
-                static_assert(version >= WL_COMPOSITOR_CREATE_SURFACE_SINCE_VERSION);
-                wl_surface_destroy(surface);
-            }
-        };
-
-        std::unique_ptr<wl_surface, Deleter> surface;
-
-        struct CallbackDeleter {
-            auto operator()(wl_callback* const callback) -> void {
-                wl_callback_destroy(callback);
-            }
-        };
-
-        std::unique_ptr<wl_callback, CallbackDeleter> frame;
-
-        static auto enter(void* const data, wl_surface* const /*surface*/, wl_output* const output) -> void {
-            if constexpr(CompositorSurfaceEnter<SurfaceGlue>) {
-                auto& self = *std::bit_cast<Surface*>(data);
-                self.glue.on_enter(std::bit_cast<OutputTag>(output));
-            }
-        }
-
-        static auto leave(void* const data, wl_surface* const /*surface*/, wl_output* const output) -> void {
-            if constexpr(CompositorSurfaceEnter<SurfaceGlue>) {
-                auto& self = *std::bit_cast<Surface*>(data);
-                self.glue.on_leave(std::bit_cast<OutputTag>(output));
-            }
-        }
-
-        static inline wl_surface_listener listener = {enter, leave};
-
-        static auto done(void* const data, wl_callback* const /*wl_callback*/, const uint32_t /*callback_data*/) -> void {
-            if constexpr(CompositorSurfaceFrame<SurfaceGlue>) {
-                auto& self = *std::bit_cast<Surface*>(data);
-                self.frame.reset();
-                self.glue.on_frame();
-            }
-        }
-
-        static inline wl_callback_listener frame_listener = {done};
-
-        [[no_unique_address]] SurfaceGlue glue;
-
-      public:
-        auto native() -> wl_surface* {
-            return surface.get();
-        }
-
-        auto attach(internal::BufferLike auto& buffer, const int32_t x, const int32_t y) -> void {
-            static_assert(version >= WL_SURFACE_ATTACH_SINCE_VERSION);
-            wl_surface_attach(surface.get(), buffer.native(), x, y);
-        }
-
-        auto damage(const int32_t x, const int32_t y, const int32_t width, const int32_t height) -> void {
-            static_assert(version >= WL_SURFACE_DAMAGE_BUFFER_SINCE_VERSION);
-            wl_surface_damage_buffer(surface.get(), x, y, width, height);
-        }
-
-        auto commit() -> void {
-            static_assert(version >= WL_SURFACE_COMMIT_SINCE_VERSION);
-            wl_surface_commit(surface.get());
-        }
-
-        auto set_buffer_scale(const int32_t scale) -> void {
-            static_assert(version >= WL_SURFACE_SET_BUFFER_SCALE_SINCE_VERSION);
-            wl_surface_set_buffer_scale(surface.get(), scale);
-        }
-
-        auto set_frame() -> void {
-            if constexpr(CompositorSurfaceFrame<SurfaceGlue>) {
-                if(!frame) {
-                    frame.reset(wl_surface_frame(surface.get()));
-                    wl_callback_add_listener(frame.get(), &frame_listener, this);
-                }
-            }
-        }
-
-        auto as_tag() const -> SurfaceTag {
-            return std::bit_cast<size_t>(surface.get());
-        }
-
-        auto operator==(const SurfaceTag tag) const -> bool {
-            return surface.get() == std::bit_cast<wl_surface*>(tag);
-        }
-
-        Surface(wl_surface* const surface, SurfaceGlue glue) : surface(surface), glue(std::move(glue)) {
-            static_assert(!(CompositorSurfaceEnter<SurfaceGlue> && version < WL_SURFACE_ENTER_SINCE_VERSION));
-            static_assert(!(CompositorSurfaceLeave<SurfaceGlue> && version < WL_SURFACE_LEAVE_SINCE_VERSION));
-
-            assert(surface);
-            wl_surface_add_listener(surface, &listener, this);
-        }
-    };
-
-  private:
-    struct Deleter {
-        auto operator()(wl_compositor* const compositor) -> void {
-            wl_compositor_destroy(compositor);
-        }
-    };
-
-    std::unique_ptr<wl_compositor, Deleter> compositor;
-    uint32_t                                id;
-
-  public:
-    static auto info() -> internal::InterfaceInfo {
-        return {"wl_compositor", version, &wl_compositor_interface};
-    }
-
-    auto interface_id() const -> uint32_t {
-        return id;
-    }
-
-    template <CompositorSurfaceGlue Glue>
-    auto create_surface(Glue glue) -> Surface<Glue> {
-        static_assert(version >= WL_COMPOSITOR_CREATE_SURFACE_SINCE_VERSION);
-
-        return {wl_compositor_create_surface(compositor.get()), std::move(glue)};
-    }
-
-    Compositor(void* const data, const uint32_t id) : compositor(std::bit_cast<wl_compositor*>(data)), id(id) {}
+    virtual auto on_wl_surface_enter(wl_output* /*output*/) -> void {}
+    virtual auto on_wl_surface_leave(wl_output* /*output*/) -> void {}
+    virtual auto on_wl_surface_preferred_buffer_scale(int32_t /*factor*/) -> void {}
+    virtual auto on_wl_surface_frame() -> void {}
 };
 
-#ifdef TOWL_NS
-}
-#endif
+class Surface {
+  private:
+    impl::AutoNativeSurface  surface;
+    impl::AutoNativeCallback frame;
+    SurfaceCallbacks*        callbacks;
+
+    static auto enter(void* data, wl_surface* surface, wl_output* output) -> void;
+    static auto leave(void* data, wl_surface* surface, wl_output* output) -> void;
+    static auto preferred_buffer_scale(void* data, wl_surface* surface, int32_t factor) -> void;
+    static auto preferred_buffer_transform(void* /*data*/, wl_surface* /*surface*/, uint32_t /*transform*/) -> void{};
+
+    static inline wl_surface_listener listener = {enter, leave, preferred_buffer_scale, preferred_buffer_transform};
+
+    static auto done(void* data, wl_callback* wl_callback, uint32_t callback_data) -> void;
+
+    static inline wl_callback_listener frame_listener = {done};
+
+  public:
+    auto native() -> wl_surface*;
+    auto attach(wl_buffer* buffer, int32_t x, int32_t y) -> void;
+    auto damage(int32_t x, int32_t y, int32_t width, int32_t height) -> void;
+    auto commit() -> void;
+    auto set_buffer_scale(int32_t scale) -> void;
+    auto set_frame() -> void;
+
+    Surface(wl_surface* surface, SurfaceCallbacks* callbacks);
+};
+
+class Compositor : public impl::Interface {
+  private:
+    impl::AutoNativeCompositor compositor;
+
+  public:
+    auto create_surface(SurfaceCallbacks* callbacks) -> Surface;
+
+    Compositor(void* data);
+};
+
+// version = 1 ~ 4
+struct CompositorBinder : impl::InterfaceBinder {
+    uint32_t interface_version;
+
+    auto get_interface_description() -> const wl_interface* override;
+    auto create_interface(void* data) -> std::unique_ptr<impl::Interface> override;
+
+    CompositorBinder(const uint32_t version)
+        : InterfaceBinder(version) {}
+};
+}; // namespace towl

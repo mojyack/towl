@@ -1,164 +1,76 @@
 #pragma once
-#include <cassert>
-#include <memory>
-
-#include "common.hpp"
-#include "internal.hpp"
 #include <xdg-shell.h>
 
-#ifdef TOWL_NS
-namespace TOWL_NS {
-#endif
+#include "interface.hpp"
+#include "macros/autoptr.hpp"
 
-template <class Glue>
-concept WMBaseXDGToplevelOnConfigure = requires(Glue& m, int32_t width, int32_t height) {
-                                           { m.on_configure(width, height) };
-                                       };
+namespace towl::impl {
+declare_autoptr(NativeXDGToplevel, xdg_toplevel, xdg_toplevel_destroy);
+declare_autoptr(NativeXDGSurface, xdg_surface, xdg_surface_destroy);
+declare_autoptr(NativeXDGWMBase, xdg_wm_base, xdg_wm_base_destroy);
+} // namespace towl::impl
 
-template <class Glue>
-concept WMBaseXDGToplevelOnClose = requires(Glue& m) {
-                                       { m.on_close() };
-                                   };
-
-template <class Glue>
-concept WMBaseXDGToplevelGlue =
-    (WMBaseXDGToplevelOnConfigure<Glue> ||
-     WMBaseXDGToplevelOnClose<Glue> ||
-     IsEmpty<Glue>) &&
-    std::movable<Glue>;
-
-// version = 1 ~ 5
-template <uint32_t version>
-class WMBase {
+namespace towl {
+class XDGToplevelCallbacks {
   public:
-    template <WMBaseXDGToplevelGlue XDGToplevelGlue>
-    class XDGToplevel {
-      private:
-        struct Deleter {
-            auto operator()(xdg_toplevel* const toplevel) -> void {
-                static_assert(version >= XDG_TOPLEVEL_DESTROY_SINCE_VERSION);
-                xdg_toplevel_destroy(toplevel);
-            }
-        };
+    virtual auto on_xdg_toplevel_configure(int /*width*/, int /*height*/) -> void {}
+    virtual auto on_xdg_toplevel_close() -> void {}
+};
 
-        std::unique_ptr<xdg_toplevel, Deleter> toplevel;
-
-        static auto configure(void* const data, xdg_toplevel* const /*toplevel*/, const int32_t width, const int32_t height, wl_array* const /*states*/) -> void {
-            if constexpr(WMBaseXDGToplevelOnConfigure<XDGToplevelGlue>) {
-                if((width != 0 && height != 0)) {
-                    auto& self = *std::bit_cast<XDGToplevel*>(data);
-                    self.glue.on_configure(width, height);
-                }
-            }
-        }
-
-        static auto close(void* const data, xdg_toplevel* const /*toplevel*/) -> void {
-            if constexpr(WMBaseXDGToplevelOnClose<XDGToplevelGlue>) {
-                auto& self = *std::bit_cast<XDGToplevel*>(data);
-                self.glue.on_close();
-            }
-        }
-
-        static auto bounds(void* const /*data*/, xdg_toplevel* const /*toplevel*/, const int32_t /*width*/, const int32_t /*height*/) -> void {}
-
-        static auto capabilities(void* const /*data*/, xdg_toplevel* const /*toplevel*/, wl_array* const /*capabilities*/) -> void{};
-
-        static inline xdg_toplevel_listener listener = {configure, close, bounds, capabilities};
-
-        [[no_unique_address]] XDGToplevelGlue glue;
-
-      public:
-        auto set_title(const char* const title) -> void {
-            static_assert(version >= XDG_TOPLEVEL_SET_TITLE_SINCE_VERSION);
-            xdg_toplevel_set_title(toplevel.get(), title);
-        }
-
-        XDGToplevel(xdg_toplevel* const toplevel, XDGToplevelGlue glue) : toplevel(toplevel), glue(std::move(glue)) {
-            static_assert(!(WMBaseXDGToplevelOnConfigure<XDGToplevelGlue> && version < XDG_TOPLEVEL_CONFIGURE_SINCE_VERSION));
-            static_assert(!(WMBaseXDGToplevelOnClose<XDGToplevelGlue> && version < XDG_TOPLEVEL_CLOSE_SINCE_VERSION));
-
-            assert(toplevel);
-            if constexpr(WMBaseXDGToplevelGlue<XDGToplevelGlue>) {
-                xdg_toplevel_add_listener(toplevel, &listener, this);
-            }
-        }
-    };
-
-    class XDGSurface {
-      private:
-        struct Deleter {
-            auto operator()(xdg_surface* const surface) -> void {
-                xdg_surface_destroy(surface);
-            }
-        };
-
-        std::unique_ptr<xdg_surface, Deleter> surface;
-
-        static auto configure(void* const /*data*/, xdg_surface* const surface, const uint32_t serial) -> void {
-            static_assert(version >= XDG_SURFACE_ACK_CONFIGURE_SINCE_VERSION);
-
-            // NOTE
-            // ack should be called after rendering to the buffer is complete.
-            // however, we did not find any problems with calling ack here and decided to call it here to increase responsiveness.
-            xdg_surface_ack_configure(surface, serial);
-        }
-
-        static inline xdg_surface_listener listener = {configure};
-
-      public:
-        template <WMBaseXDGToplevelGlue Glue>
-        auto create_xdg_toplevel(Glue&& glue) -> XDGToplevel<Glue> {
-            static_assert(version >= XDG_SURFACE_GET_TOPLEVEL_SINCE_VERSION);
-            return XDGToplevel<Glue>(xdg_surface_get_toplevel(surface.get()), std::move(glue));
-        }
-
-        XDGSurface(xdg_surface* const surface) : surface(surface) {
-            static_assert(version >= XDG_TOPLEVEL_CONFIGURE_SINCE_VERSION);
-
-            assert(surface);
-            xdg_surface_add_listener(surface, &listener, this);
-        }
-    };
-
+class XDGToplevel {
   private:
-    struct Deleter {
-        auto operator()(xdg_wm_base* const wm_base) -> void {
-            static_assert(version >= XDG_WM_BASE_DESTROY_SINCE_VERSION);
-            xdg_wm_base_destroy(wm_base);
-        }
-    };
+    impl::AutoNativeXDGToplevel toplevel;
+    XDGToplevelCallbacks*       callbacks;
 
-    std::unique_ptr<xdg_wm_base, Deleter> wm_base;
+    static auto configure(void* data, xdg_toplevel* toplevel, int32_t width, int32_t height, wl_array* states) -> void;
+    static auto close(void* data, xdg_toplevel* toplevel) -> void;
+    static auto bounds(void* const /*data*/, xdg_toplevel* const /*toplevel*/, const int32_t /*width*/, const int32_t /*height*/) -> void {}
+    static auto capabilities(void* const /*data*/, xdg_toplevel* const /*toplevel*/, wl_array* const /*capabilities*/) -> void{};
 
-    static auto ping(void* const /*data*/, xdg_wm_base* const wm_base, const uint32_t serial) -> void {
-        static_assert(version >= XDG_WM_BASE_PONG_SINCE_VERSION);
-        xdg_wm_base_pong(wm_base, serial);
-    }
+    static inline xdg_toplevel_listener listener = {configure, close, bounds, capabilities};
+
+  public:
+    auto set_title(const char* title) -> void;
+
+    XDGToplevel(xdg_toplevel* const toplevel, XDGToplevelCallbacks* const callbacks);
+};
+
+class XDGSurface {
+  private:
+    impl::AutoNativeXDGSurface surface;
+
+    static auto configure(void* data, xdg_surface* surface, uint32_t serial) -> void;
+
+    static inline xdg_surface_listener listener = {configure};
+
+  public:
+    auto create_xdg_toplevel(XDGToplevelCallbacks* callbacks) -> XDGToplevel;
+
+    XDGSurface(xdg_surface* const surface);
+};
+
+class XDGWMBase : public impl::Interface {
+  private:
+    impl::AutoNativeXDGWMBase wm_base;
+
+    static auto ping(void* data, xdg_wm_base* wm_base, uint32_t serial) -> void;
 
     static inline xdg_wm_base_listener listener = {ping};
 
-    uint32_t id;
-
   public:
-    static auto info() -> internal::InterfaceInfo {
-        return {"xdg_wm_base", version, &xdg_wm_base_interface};
-    }
+    auto create_xdg_surface(wl_surface* const surface) -> XDGSurface;
 
-    auto interface_id() const -> uint32_t {
-        return id;
-    }
-
-    auto create_xdg_surface(internal::SurfaceLike auto& surface) -> XDGSurface {
-        static_assert(version >= XDG_WM_BASE_GET_XDG_SURFACE_SINCE_VERSION);
-        return {xdg_wm_base_get_xdg_surface(wm_base.get(), surface.native())};
-    }
-
-    WMBase(void* const data, const uint32_t id) : wm_base(std::bit_cast<xdg_wm_base*>(data)), id(id) {
-        static_assert(version >= XDG_WM_BASE_PING_SINCE_VERSION);
-        xdg_wm_base_add_listener(wm_base.get(), &listener, this);
-    }
+    XDGWMBase(void* data);
 };
 
-#ifdef TOWL_NS
-}
-#endif
+// version = 1 ~ 5
+struct XDGWMBaseBinder : impl::InterfaceBinder {
+    uint32_t interface_version;
+
+    auto get_interface_description() -> const wl_interface* override;
+    auto create_interface(void* data) -> std::unique_ptr<impl::Interface> override;
+
+    XDGWMBaseBinder(const uint32_t version)
+        : InterfaceBinder(version) {}
+};
+} // namespace towl

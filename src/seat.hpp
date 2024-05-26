@@ -1,101 +1,56 @@
 #pragma once
-#include <cassert>
-#include <memory>
 #include <optional>
 
-#include "common.hpp"
-#include "internal.hpp"
+#include <wayland-client.h>
+
+#include "interface.hpp"
 #include "keyboard.hpp"
-#include "mouse.hpp"
+#include "pointer.hpp"
 #include "touch.hpp"
 
-#ifdef TOWL_NS
-namespace TOWL_NS {
-#endif
+namespace towl::impl {
+struct AutoNativeSeatDeleter {
+    uint32_t version;
 
-// version = 1 ~ 8
-template <uint32_t version, KeyboardGlue KeyboardGlue, PointerGlue PointerGlue, TouchGlue TouchGlue>
-class Seat {
+    auto operator()(wl_seat* seat) -> void;
+};
+
+using AutoNativeSeat = std::unique_ptr<wl_seat, AutoNativeSeatDeleter>;
+} // namespace towl::impl
+
+namespace towl {
+class Seat : public impl::Interface {
   private:
-    struct Deleter {
-        auto operator()(wl_seat* seat) -> void {
-            if(version >= WL_SEAT_RELEASE_SINCE_VERSION) {
-                wl_seat_release(seat);
-            } else {
-                wl_seat_destroy(seat);
-            }
-        }
-    };
+    impl::AutoNativeSeat    seat;
+    std::optional<Keyboard> keyboard;
+    std::optional<Pointer>  pointer;
+    std::optional<Touch>    touch;
+    KeyboardCallbacks*      keyboard_callbacks;
+    PointerCallbacks*       pointer_callbacks;
+    TouchCallbacks*         touch_callbacks;
 
-    std::unique_ptr<wl_seat, Deleter> seat;
-
-    static auto capabilities(void* const data, wl_seat* const /*seat*/, const uint32_t cap) -> void {
-        auto& self = *std::bit_cast<Seat*>(data);
-        if constexpr(!IsEmpty<KeyboardGlue>) {
-            if(cap & WL_SEAT_CAPABILITY_KEYBOARD) {
-                static_assert(version >= WL_SEAT_GET_KEYBOARD_SINCE_VERSION);
-                self.keyboard.emplace(wl_seat_get_keyboard(self.seat.get()), self.keyboard_glue);
-            } else {
-                self.keyboard.reset();
-            }
-        }
-        if constexpr(!IsEmpty<PointerGlue>) {
-            if(cap & WL_SEAT_CAPABILITY_POINTER) {
-                static_assert(version >= WL_SEAT_GET_POINTER_SINCE_VERSION);
-                self.pointer.emplace(wl_seat_get_pointer(self.seat.get()), self.pointer_glue);
-            } else {
-                self.pointer.reset();
-            }
-        }
-        if constexpr(!IsEmpty<TouchGlue>) {
-            if(cap & WL_SEAT_CAPABILITY_TOUCH) {
-                static_assert(version >= WL_SEAT_GET_TOUCH_SINCE_VERSION);
-                self.touch.emplace(wl_seat_get_touch(self.seat.get()), self.touch_glue);
-            } else {
-                self.touch.reset();
-            }
-        }
-    }
-
+    static auto capabilities(void* data, wl_seat* seat, uint32_t cap) -> void;
     static auto name(void* const /*data*/, wl_seat* const /*wl_seat*/, const char* const /*name*/) -> void {}
 
     static inline wl_seat_listener listener = {capabilities, name};
 
-    uint32_t id;
-
-    using KeyboardOpt = std::optional<Keyboard<version, KeyboardGlue>>;
-    using PointerOpt  = std::optional<Pointer<version, PointerGlue>>;
-    using TouchOpt    = std::optional<Touch<version, TouchGlue>>;
-
-    [[no_unique_address]] KeyboardGlue                                                   keyboard_glue;
-    [[no_unique_address]] PointerGlue                                                    pointer_glue;
-    [[no_unique_address]] TouchGlue                                                      touch_glue;
-    [[no_unique_address]] std::conditional_t<!IsEmpty<KeyboardGlue>, KeyboardOpt, Empty> keyboard;
-    [[no_unique_address]] std::conditional_t<!IsEmpty<PointerGlue>, PointerOpt, Empty>   pointer;
-    [[no_unique_address]] std::conditional_t<!IsEmpty<TouchGlue>, TouchOpt, Empty>       touch;
-
   public:
-    static auto info() -> internal::InterfaceInfo {
-        return {"wl_seat", version, &wl_seat_interface};
-    }
-
-    auto interface_id() const -> uint32_t {
-        return id;
-    }
-
-    Seat(void* const data, const uint32_t id, auto glue_param)
-        : seat(std::bit_cast<wl_seat*>(data)),
-          id(id),
-          keyboard_glue(glue_param),
-          pointer_glue(glue_param),
-          touch_glue(glue_param) {
-        static_assert(version >= WL_SEAT_CAPABILITIES_SINCE_VERSION);
-        static_assert(version >= WL_SEAT_NAME_SINCE_VERSION);
-
-        wl_seat_add_listener(seat.get(), &listener, this);
-    }
+    Seat(void* data, uint32_t version, KeyboardCallbacks* keyboard_callbacks, PointerCallbacks* pointer_callbacks, TouchCallbacks* touch_callbacks);
 };
 
-#ifdef TOWL_NS
-}
-#endif
+// version = 1 ~ 8
+struct SeatBinder : impl::InterfaceBinder {
+    KeyboardCallbacks* keyboard_callbacks; // nullable
+    PointerCallbacks*  pointer_callbacks;  // nullable
+    TouchCallbacks*    touch_callbacks;    // nullable
+
+    auto get_interface_description() -> const wl_interface* override;
+    auto create_interface(void* data) -> std::unique_ptr<impl::Interface> override;
+
+    SeatBinder(const uint32_t version, KeyboardCallbacks* keyboard_callbacks, PointerCallbacks* pointer_callbacks, TouchCallbacks* touch_callbacks)
+        : InterfaceBinder(version),
+          keyboard_callbacks(keyboard_callbacks),
+          pointer_callbacks(pointer_callbacks),
+          touch_callbacks(touch_callbacks) {}
+};
+} // namespace towl
