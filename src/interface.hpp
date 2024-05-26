@@ -25,6 +25,7 @@ struct InterfaceBinder {
     auto bind(void* data, uint32_t interface_id) -> void;
     auto unbind(uint32_t interface_id) -> bool;
 
+    InterfaceBinder(InterfaceBinder&&) = default;
     InterfaceBinder(uint32_t version) : version(version) {}
 
     virtual ~InterfaceBinder() {}
