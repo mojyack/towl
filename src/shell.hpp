@@ -13,7 +13,7 @@ namespace towl {
 class ShellSurfaceCallbacks {
   public:
     virtual auto on_wl_shell_surface_configure(uint32_t /*width*/, uint32_t /*height*/) -> void {}
-    ~ShellSurfaceCallbacks(){};
+    virtual ~ShellSurfaceCallbacks(){};
 };
 
 class ShellSurface {
