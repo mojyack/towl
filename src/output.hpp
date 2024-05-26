@@ -16,7 +16,8 @@ using AutoNativeOutput = std::unique_ptr<wl_output, AutoNativeOutputDeleter>;
 namespace towl {
 class OutputCallbacks {
   public:
-    virtual auto on_wl_output_scale(wl_output* const /*output*/, uint32_t /*scale*/) -> void {}
+    virtual auto on_wl_output_scale(wl_output* /*output*/, uint32_t /*scale*/) -> void {}
+    virtual ~OutputCallbacks(){};
 };
 
 class Output : public impl::Interface {
