@@ -71,8 +71,8 @@ auto Display::flush() -> void {
     wl_display_flush(display.get());
 }
 
-auto Display::get_registry() -> Registry {
-    return Registry(wl_display_get_registry(display.get()));
+auto Display::get_registry() -> wl_registry* {
+    return wl_display_get_registry(display.get());
 }
 
 Display::Display() {

@@ -2,7 +2,6 @@
 #include <wayland-client.h>
 
 #include "macros/autoptr.hpp"
-#include "registry.hpp"
 
 namespace towl::impl {
 declare_autoptr(NativeDisplay, wl_display, wl_display_disconnect);
@@ -42,7 +41,7 @@ class Display {
     auto dispatch() -> bool;
     auto dispatch_pending() -> bool;
     auto flush() -> void;
-    auto get_registry() -> Registry;
+    auto get_registry() -> wl_registry*;
 
     Display();
 };
