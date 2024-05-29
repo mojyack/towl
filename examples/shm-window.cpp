@@ -44,7 +44,7 @@ auto main() -> int {
     auto display = towl::Display();
 
     // bind interfaces
-    auto registry           = display.get_registry();
+    auto registry           = towl::Registry(display.get_registry());
     auto compositor_binder  = towl::CompositorBinder(4);
     auto xdg_wm_base_binder = towl::XDGWMBaseBinder(2);
     auto shm_binder         = towl::ShmBinder(1);
