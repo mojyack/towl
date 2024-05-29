@@ -33,5 +33,7 @@ auto Touch::frame(void* const data, wl_touch* const /*wl_touch*/) -> void {
 
 Touch::Touch(wl_touch* const touch, const uint32_t version, TouchCallbacks* const callbacks)
     : touch(touch, {version}),
-      callbacks(callbacks){};
+      callbacks(callbacks) {
+    wl_touch_add_listener(touch, &listener, this);
+};
 } // namespace towl

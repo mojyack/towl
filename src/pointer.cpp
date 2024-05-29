@@ -63,5 +63,7 @@ auto Pointer::axis_value120(void* const data, wl_pointer* const /*pointer*/, con
 
 Pointer::Pointer(wl_pointer* const pointer, const uint32_t version, PointerCallbacks* const callbacks)
     : pointer(pointer, {version}),
-      callbacks(callbacks){};
+      callbacks(callbacks) {
+    wl_pointer_add_listener(pointer, &listener, this);
+};
 } // namespace towl

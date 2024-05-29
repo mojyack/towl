@@ -43,5 +43,7 @@ auto Keyboard::repeat_info(void* const data, wl_keyboard* const /*wl_keyboard*/,
 
 Keyboard::Keyboard(wl_keyboard* const keyboard, const uint32_t version, KeyboardCallbacks* const callbacks)
     : keyboard(keyboard, {version}),
-      callbacks(callbacks){};
+      callbacks(callbacks) {
+    wl_keyboard_add_listener(keyboard, &listener, this);
+};
 } // namespace towl
