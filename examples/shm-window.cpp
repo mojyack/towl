@@ -1,9 +1,11 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-#include "towl/towl.hpp"
-
-#include "macros/assert.hpp"
+#include "towl/compositor.hpp"
+#include "towl/display.hpp"
+#include "towl/registry.hpp"
+#include "towl/shm.hpp"
+#include "towl/xdg-wm-base.hpp"
 #include "util/assert.hpp"
 #include "util/fd.hpp"
 
@@ -30,8 +32,8 @@ struct Image {
           pool(shm->create_shm_pool(unix_shm.as_handle(), size)),
           buffer(pool.create_buffer(0, width, height, width * 4, WL_SHM_FORMAT_ARGB8888)),
           data(static_cast<uint8_t*>(mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, unix_shm.as_handle(), 0))) {
-        DYN_ASSERT(data != MAP_FILE);
-        DYN_ASSERT(ftruncate(unix_shm.as_handle(), size) >= 0);
+        dynamic_assert(data != MAP_FILE);
+        dynamic_assert(ftruncate(unix_shm.as_handle(), size) >= 0);
     }
 
     ~Image() {
@@ -50,9 +52,9 @@ auto main() -> int {
     auto shm_binder         = towl::ShmBinder(1);
     registry.set_binders({&compositor_binder, &xdg_wm_base_binder, &shm_binder});
     display.roundtrip();
-    DYN_ASSERT(!compositor_binder.interfaces.empty());
-    DYN_ASSERT(!xdg_wm_base_binder.interfaces.empty());
-    DYN_ASSERT(!shm_binder.interfaces.empty());
+    dynamic_assert(!compositor_binder.interfaces.empty());
+    dynamic_assert(!xdg_wm_base_binder.interfaces.empty());
+    dynamic_assert(!shm_binder.interfaces.empty());
 
     // get surface from compositor
     auto surface_callbacks = towl::SurfaceCallbacks();

@@ -1,5 +1,4 @@
 #include "compositor.hpp"
-#include "macros/assert.hpp"
 #include "util/assert.hpp"
 
 namespace towl {
@@ -54,7 +53,7 @@ auto Surface::set_frame() -> void {
 Surface::Surface(wl_surface* const surface, SurfaceCallbacks* const callbacks)
     : surface(surface),
       callbacks(callbacks) {
-    DYN_ASSERT(surface);
+    dynamic_assert(surface);
     wl_surface_add_listener(surface, &listener, this);
 }
 

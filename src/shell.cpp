@@ -1,5 +1,4 @@
 #include "shell.hpp"
-#include "macros/assert.hpp"
 #include "util/assert.hpp"
 
 namespace towl {
@@ -15,7 +14,7 @@ auto ShellSurface::configure(void* const data, wl_shell_surface* const /*shell_s
 ShellSurface::ShellSurface(wl_shell_surface* const shell_surface, const bool toplevel, ShellSurfaceCallbacks* callbacks)
     : shell_surface(shell_surface),
       callbacks(callbacks) {
-    DYN_ASSERT(shell_surface != NULL);
+    dynamic_assert(shell_surface != NULL);
     wl_shell_surface_add_listener(shell_surface, &listener, this);
     if(toplevel) {
         wl_shell_surface_set_toplevel(shell_surface);

@@ -1,6 +1,4 @@
 #include "display.hpp"
-
-#include "macros/assert.hpp"
 #include "util/assert.hpp"
 
 namespace towl {
@@ -77,6 +75,6 @@ auto Display::get_registry() -> wl_registry* {
 
 Display::Display() {
     display.reset(wl_display_connect(nullptr));
-    DYN_ASSERT(display != NULL);
+    dynamic_assert(display != NULL);
 }
 }; // namespace towl

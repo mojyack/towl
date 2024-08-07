@@ -4,7 +4,6 @@
 
 #include "macros/assert.hpp"
 #include "registry.hpp"
-#include "util/assert.hpp"
 
 namespace towl {
 auto Registry::global_callback(void* const data, wl_registry* const /*registry*/, const uint32_t id, const char* const interface, const uint32_t version) -> void {
