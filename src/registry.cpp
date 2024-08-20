@@ -23,7 +23,7 @@ auto Registry::bind_interface(const char* const name, const uint32_t version, co
         if(std::strcmp(desc.name, name) != 0) {
             continue;
         }
-        assert_n(required_version <= version, "application requires version ", required_version, " of ", desc.name, ", but server provides version ", version, ".");
+        ensure(required_version <= version, "application requires version ", required_version, " of ", desc.name, ", but server provides version ", version, ".");
         const auto data = wl_registry_bind(registry.get(), id, &desc, required_version);
         binder->bind(data, id);
         break;

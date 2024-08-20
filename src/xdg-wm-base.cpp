@@ -19,7 +19,7 @@ auto XDGToplevel::set_title(const char* const title) -> void {
 XDGToplevel::XDGToplevel(xdg_toplevel* const toplevel, XDGToplevelCallbacks* const callbacks)
     : toplevel(toplevel),
       callbacks(callbacks) {
-    dynamic_assert(toplevel != NULL);
+    line_assert(toplevel != NULL);
     xdg_toplevel_add_listener(toplevel, &listener, this);
 }
 
@@ -36,7 +36,7 @@ auto XDGSurface::create_xdg_toplevel(XDGToplevelCallbacks* callbacks) -> XDGTopl
 
 XDGSurface::XDGSurface(xdg_surface* surface)
     : surface(surface) {
-    dynamic_assert(surface != NULL);
+    line_assert(surface != NULL);
     xdg_surface_add_listener(surface, &listener, this);
 }
 

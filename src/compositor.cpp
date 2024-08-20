@@ -53,7 +53,7 @@ auto Surface::set_frame() -> void {
 Surface::Surface(wl_surface* const surface, SurfaceCallbacks* const callbacks)
     : surface(surface),
       callbacks(callbacks) {
-    dynamic_assert(surface);
+    line_assert(bool(surface));
     wl_surface_add_listener(surface, &listener, this);
 }
 

@@ -19,6 +19,6 @@ auto EGLWindow::get_attached_size() const -> std::pair<int, int> {
 
 EGLWindow::EGLWindow(wl_surface* const surface, const int width, const int height)
     : egl_window(wl_egl_window_create(surface, width, height)) {
-    dynamic_assert(egl_window.get() != NULL);
+    line_assert(egl_window.get() != NULL);
 }
 } // namespace towl

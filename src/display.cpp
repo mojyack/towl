@@ -75,6 +75,6 @@ auto Display::get_registry() -> wl_registry* {
 
 Display::Display() {
     display.reset(wl_display_connect(nullptr));
-    dynamic_assert(display != NULL);
+    line_assert(display != NULL);
 }
 }; // namespace towl
