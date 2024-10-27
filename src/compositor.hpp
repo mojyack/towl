@@ -29,7 +29,7 @@ class Surface {
     static auto enter(void* data, wl_surface* surface, wl_output* output) -> void;
     static auto leave(void* data, wl_surface* surface, wl_output* output) -> void;
     static auto preferred_buffer_scale(void* data, wl_surface* surface, int32_t factor) -> void;
-    static auto preferred_buffer_transform(void* /*data*/, wl_surface* /*surface*/, uint32_t /*transform*/) -> void{};
+    static auto preferred_buffer_transform(void* /*data*/, wl_surface* /*surface*/, uint32_t /*transform*/) -> void {};
 
     static inline wl_surface_listener listener = {enter, leave, preferred_buffer_scale, preferred_buffer_transform};
 
@@ -44,8 +44,10 @@ class Surface {
     auto commit() -> void;
     auto set_buffer_scale(int32_t scale) -> void;
     auto set_frame() -> void;
+    auto init(SurfaceCallbacks* callbacks) -> bool;
 
-    Surface(wl_surface* surface, SurfaceCallbacks* callbacks);
+    Surface() = default;
+    Surface(wl_surface* surface);
 };
 
 class Compositor : public impl::Interface {
@@ -53,7 +55,7 @@ class Compositor : public impl::Interface {
     impl::AutoNativeCompositor compositor;
 
   public:
-    auto create_surface(SurfaceCallbacks* callbacks) -> Surface;
+    auto create_surface() -> Surface;
 
     Compositor(void* data);
 };

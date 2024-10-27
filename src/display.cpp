@@ -23,10 +23,8 @@ DisplayReadIntent::~DisplayReadIntent() {
 }
 
 auto Display::done(void* const data, wl_callback* const callback, const uint32_t /*time*/) -> void {
-    auto& flag = *std::bit_cast<std::atomic_flag*>(data);
-    flag.test_and_set();
-    flag.notify_one();
-
+    auto& event = *std::bit_cast<coop::Event*>(data);
+    event.notify();
     wl_callback_destroy(callback);
 }
 
@@ -34,12 +32,12 @@ auto Display::native() -> wl_display* {
     return display.get();
 }
 
-auto Display::wait_sync() -> void {
-    auto flag = std::atomic_flag(false);
-    auto sync = wl_display_sync(display.get());
-    wl_callback_add_listener(sync, &listener, &flag);
+auto Display::wait_sync() -> coop::Async<void> {
+    auto event = coop::Event();
+    auto sync  = wl_display_sync(display.get());
+    wl_callback_add_listener(sync, &listener, &event);
     flush();
-    flag.wait(false);
+    co_await event;
 }
 
 auto Display::get_fd() -> int {

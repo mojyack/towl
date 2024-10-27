@@ -26,14 +26,16 @@ class XDGToplevel {
     static auto configure(void* data, xdg_toplevel* toplevel, int32_t width, int32_t height, wl_array* states) -> void;
     static auto close(void* data, xdg_toplevel* toplevel) -> void;
     static auto bounds(void* const /*data*/, xdg_toplevel* const /*toplevel*/, const int32_t /*width*/, const int32_t /*height*/) -> void {}
-    static auto capabilities(void* const /*data*/, xdg_toplevel* const /*toplevel*/, wl_array* const /*capabilities*/) -> void{};
+    static auto capabilities(void* const /*data*/, xdg_toplevel* const /*toplevel*/, wl_array* const /*capabilities*/) -> void {};
 
     static inline xdg_toplevel_listener listener = {configure, close, bounds, capabilities};
 
   public:
     auto set_title(const char* title) -> void;
+    auto init(XDGToplevelCallbacks* callbacks) -> bool;
 
-    XDGToplevel(xdg_toplevel* const toplevel, XDGToplevelCallbacks* const callbacks);
+    XDGToplevel() = default;
+    XDGToplevel(xdg_toplevel* const toplevel);
 };
 
 class XDGSurface {
@@ -45,8 +47,10 @@ class XDGSurface {
     static inline xdg_surface_listener listener = {configure};
 
   public:
-    auto create_xdg_toplevel(XDGToplevelCallbacks* callbacks) -> XDGToplevel;
+    auto create_xdg_toplevel() -> XDGToplevel;
+    auto init() -> bool;
 
+    XDGSurface() = default;
     XDGSurface(xdg_surface* const surface);
 };
 

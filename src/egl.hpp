@@ -20,6 +20,7 @@ class EGLWindow {
     auto resize(int width, int height, int dx, int dy) -> void;
     auto get_attached_size() const -> std::pair<int, int>;
 
+    EGLWindow() = default;
     EGLWindow(wl_surface* const surface, const int width, const int height);
 };
 } // namespace towl

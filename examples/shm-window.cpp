@@ -59,13 +59,16 @@ auto main() -> int {
     // get surface from compositor
     auto surface_callbacks = towl::SurfaceCallbacks();
     auto compositor        = std::bit_cast<towl::Compositor*>(compositor_binder.interfaces[0].get());
-    auto surface           = compositor->create_surface(&surface_callbacks);
+    auto surface           = compositor->create_surface();
+    surface.init(&surface_callbacks);
 
     // create xdg_surface and xdg_toplevel
     auto wmbase                 = std::bit_cast<towl::XDGWMBase*>(xdg_wm_base_binder.interfaces[0].get());
     auto xdg_surface            = wmbase->create_xdg_surface(surface.native());
+    xdg_surface.init();
     auto xdg_toplevel_callbacks = towl::XDGToplevelCallbacks();
-    auto xdg_toplevel           = xdg_surface.create_xdg_toplevel(&xdg_toplevel_callbacks);
+    auto xdg_toplevel           = xdg_surface.create_xdg_toplevel();
+    xdg_toplevel.init(&xdg_toplevel_callbacks);
 
     // then commit surface changes
     surface.commit();

@@ -1,5 +1,5 @@
 #include "compositor.hpp"
-#include "util/assert.hpp"
+#include "macros/assert.hpp"
 
 namespace towl {
 auto Surface::enter(void* const data, wl_surface* const /*surface*/, wl_output* const output) -> void {
@@ -43,6 +43,13 @@ auto Surface::set_buffer_scale(const int32_t scale) -> void {
     wl_surface_set_buffer_scale(surface.get(), scale);
 }
 
+auto Surface::init(SurfaceCallbacks* const callbacks) -> bool {
+    ensure(surface);
+    this->callbacks = callbacks;
+    wl_surface_add_listener(surface.get(), &listener, this);
+    return true;
+}
+
 auto Surface::set_frame() -> void {
     if(!frame) {
         frame.reset(wl_surface_frame(surface.get()));
@@ -50,15 +57,12 @@ auto Surface::set_frame() -> void {
     }
 }
 
-Surface::Surface(wl_surface* const surface, SurfaceCallbacks* const callbacks)
-    : surface(surface),
-      callbacks(callbacks) {
-    line_assert(bool(surface));
-    wl_surface_add_listener(surface, &listener, this);
+Surface::Surface(wl_surface* const surface)
+    : surface(surface) {
 }
 
-auto Compositor::create_surface(SurfaceCallbacks* callbacks) -> Surface {
-    return {wl_compositor_create_surface(compositor.get()), callbacks};
+auto Compositor::create_surface() -> Surface {
+    return {wl_compositor_create_surface(compositor.get())};
 }
 
 Compositor::Compositor(void* const data)

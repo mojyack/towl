@@ -1,5 +1,5 @@
 #include "xdg-wm-base.hpp"
-#include "util/assert.hpp"
+#include "macros/assert.hpp"
 
 namespace towl {
 auto XDGToplevel::configure(void* const data, xdg_toplevel* const /*toplevel*/, const int32_t width, const int32_t height, wl_array* const /*states*/) -> void {
@@ -16,11 +16,15 @@ auto XDGToplevel::set_title(const char* const title) -> void {
     xdg_toplevel_set_title(toplevel.get(), title);
 }
 
-XDGToplevel::XDGToplevel(xdg_toplevel* const toplevel, XDGToplevelCallbacks* const callbacks)
-    : toplevel(toplevel),
-      callbacks(callbacks) {
-    line_assert(toplevel != NULL);
-    xdg_toplevel_add_listener(toplevel, &listener, this);
+auto XDGToplevel::init(XDGToplevelCallbacks* const callbacks) -> bool {
+    ensure(toplevel != NULL);
+    this->callbacks = callbacks;
+    xdg_toplevel_add_listener(toplevel.get(), &listener, this);
+    return true;
+}
+
+XDGToplevel::XDGToplevel(xdg_toplevel* const toplevel)
+    : toplevel(toplevel) {
 }
 
 auto XDGSurface::configure(void* const /*data*/, xdg_surface* const surface, const uint32_t serial) -> void {
@@ -30,14 +34,18 @@ auto XDGSurface::configure(void* const /*data*/, xdg_surface* const surface, con
     xdg_surface_ack_configure(surface, serial);
 }
 
-auto XDGSurface::create_xdg_toplevel(XDGToplevelCallbacks* callbacks) -> XDGToplevel {
-    return XDGToplevel(xdg_surface_get_toplevel(surface.get()), callbacks);
+auto XDGSurface::create_xdg_toplevel() -> XDGToplevel {
+    return XDGToplevel(xdg_surface_get_toplevel(surface.get()));
 }
 
-XDGSurface::XDGSurface(xdg_surface* surface)
+auto XDGSurface::init() -> bool {
+    ensure(surface != NULL);
+    xdg_surface_add_listener(surface.get(), &listener, this);
+    return true;
+}
+
+XDGSurface::XDGSurface(xdg_surface* const surface)
     : surface(surface) {
-    line_assert(surface != NULL);
-    xdg_surface_add_listener(surface, &listener, this);
 }
 
 auto XDGWMBase::ping(void* const /*data*/, xdg_wm_base* const wm_base, const uint32_t serial) -> void {

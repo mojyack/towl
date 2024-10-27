@@ -1,4 +1,6 @@
 #pragma once
+#include <coop/event.hpp>
+#include <coop/runner.hpp>
 #include <wayland-client.h>
 
 #include "macros/autoptr.hpp"
@@ -34,7 +36,7 @@ class Display {
 
   public:
     auto native() -> wl_display*;
-    auto wait_sync() -> void;
+    auto wait_sync() -> coop::Async<void>;
     auto get_fd() -> int;
     auto obtain_read_intent() -> DisplayReadIntent;
     auto roundtrip() -> bool;
