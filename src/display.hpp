@@ -1,6 +1,6 @@
 #pragma once
-#include <coop/event.hpp>
-#include <coop/runner.hpp>
+#include <coop/generator.hpp>
+#include <coop/promise.hpp>
 #include <wayland-client.h>
 
 #include "macros/autoptr.hpp"

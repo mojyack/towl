@@ -1,3 +1,5 @@
+#include <coop/event.hpp>
+
 #include "display.hpp"
 #include "util/assert.hpp"
 
