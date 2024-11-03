@@ -1,4 +1,4 @@
-#include <coop/event.hpp>
+#include <coop/single-event.hpp>
 
 #include "display.hpp"
 #include "util/assert.hpp"
@@ -25,7 +25,7 @@ DisplayReadIntent::~DisplayReadIntent() {
 }
 
 auto Display::done(void* const data, wl_callback* const callback, const uint32_t /*time*/) -> void {
-    auto& event = *std::bit_cast<coop::Event*>(data);
+    auto& event = *std::bit_cast<coop::SingleEvent*>(data);
     event.notify();
     wl_callback_destroy(callback);
 }
@@ -35,7 +35,7 @@ auto Display::native() -> wl_display* {
 }
 
 auto Display::wait_sync() -> coop::Async<void> {
-    auto event = coop::Event();
+    auto event = coop::SingleEvent();
     auto sync  = wl_display_sync(display.get());
     wl_callback_add_listener(sync, &listener, &event);
     flush();
