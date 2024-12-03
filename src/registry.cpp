@@ -1,3 +1,4 @@
+#include <cstring>
 #include <vector>
 
 #include <wayland-client.h>
