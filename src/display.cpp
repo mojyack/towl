@@ -1,7 +1,7 @@
 #include <coop/single-event.hpp>
 
 #include "display.hpp"
-#include "util/assert.hpp"
+#include "macros/assert.hpp"
 
 namespace towl {
 auto DisplayReadIntent::read() -> void {
@@ -75,6 +75,6 @@ auto Display::get_registry() -> wl_registry* {
 
 Display::Display() {
     display.reset(wl_display_connect(nullptr));
-    line_assert(display != NULL);
+    ASSERT(display != NULL);
 }
 }; // namespace towl

@@ -1,5 +1,5 @@
 #include "egl.hpp"
-#include "util/assert.hpp"
+#include "macros/assert.hpp"
 
 namespace towl {
 auto EGLWindow::native() -> wl_egl_window* {
@@ -19,6 +19,6 @@ auto EGLWindow::get_attached_size() const -> std::pair<int, int> {
 
 EGLWindow::EGLWindow(wl_surface* const surface, const int width, const int height)
     : egl_window(wl_egl_window_create(surface, width, height)) {
-    line_assert(egl_window.get() != NULL);
+    ASSERT(egl_window.get() != NULL);
 }
 } // namespace towl
