@@ -1,4 +1,6 @@
 #pragma once
+#include <bit>
+
 #include <wayland-client.h>
 
 namespace towl {
