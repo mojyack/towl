@@ -50,6 +50,6 @@ towl_deps = [wayland_client, wayland_egl]
 
 egl    = dependency('egl')
 opengl = dependency('opengl')
-coop   = dependency('coop', version : ['>=1.0.5', '<1.1.0'])
+coop   = dependency('coop', version : ['>=1.0.5', '<1.3.0'])
 
 towl_egl_deps = [egl, opengl, coop]
