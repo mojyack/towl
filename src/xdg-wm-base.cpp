@@ -27,19 +27,19 @@ XDGToplevel::XDGToplevel(xdg_toplevel* const toplevel)
     : toplevel(toplevel) {
 }
 
-auto XDGSurface::configure(void* const /*data*/, xdg_surface* const surface, const uint32_t serial) -> void {
-    // NOTE
-    // ack should be called after rendering to the buffer is complete.
-    // however, we did not find any problems with calling ack here and decided to call it here to increase responsiveness.
+auto XDGSurface::configure(void* const data, xdg_surface* const surface, const uint32_t serial) -> void {
     xdg_surface_ack_configure(surface, serial);
+    auto& self = *std::bit_cast<XDGSurface*>(data);
+    self.callbacks->on_xdg_surface_configure();
 }
 
 auto XDGSurface::create_xdg_toplevel() -> XDGToplevel {
     return XDGToplevel(xdg_surface_get_toplevel(surface.get()));
 }
 
-auto XDGSurface::init() -> bool {
+auto XDGSurface::init(XDGSurfaceCallbacks* callbacks) -> bool {
     ensure(surface != NULL);
+    this->callbacks = callbacks;
     xdg_surface_add_listener(surface.get(), &listener, this);
     return true;
 }

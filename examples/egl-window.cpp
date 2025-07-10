@@ -76,9 +76,10 @@ auto main() -> int {
     surface.init(&surface_callbacks);
 
     // create xdg_surface and xdg_toplevel
-    auto wmbase      = std::bit_cast<towl::XDGWMBase*>(xdg_wm_base_binder.interfaces[0].get());
-    auto xdg_surface = wmbase->create_xdg_surface(surface.native());
-    xdg_surface.init();
+    auto xdg_surface_callback = towl::XDGSurfaceCallbacks();
+    auto wmbase               = std::bit_cast<towl::XDGWMBase*>(xdg_wm_base_binder.interfaces[0].get());
+    auto xdg_surface          = wmbase->create_xdg_surface(surface.native());
+    xdg_surface.init(&xdg_surface_callback);
     auto xdg_toplevel_callbacks = towl::XDGToplevelCallbacks();
     auto xdg_toplevel           = xdg_surface.create_xdg_toplevel();
     xdg_toplevel.init(&xdg_toplevel_callbacks);

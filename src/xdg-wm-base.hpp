@@ -38,9 +38,15 @@ class XDGToplevel {
     XDGToplevel(xdg_toplevel* const toplevel);
 };
 
+class XDGSurfaceCallbacks {
+  public:
+    virtual auto on_xdg_surface_configure() -> void {}
+};
+
 class XDGSurface {
   private:
     impl::AutoNativeXDGSurface surface;
+    XDGSurfaceCallbacks*       callbacks;
 
     static auto configure(void* data, xdg_surface* surface, uint32_t serial) -> void;
 
@@ -48,7 +54,7 @@ class XDGSurface {
 
   public:
     auto create_xdg_toplevel() -> XDGToplevel;
-    auto init() -> bool;
+    auto init(XDGSurfaceCallbacks* callbacks) -> bool;
 
     XDGSurface() = default;
     XDGSurface(xdg_surface* const surface);
