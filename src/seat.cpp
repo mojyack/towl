@@ -30,13 +30,17 @@ auto Seat::capabilities(void* const data, wl_seat* const /*seat*/, const uint32_
     }
 }
 
+auto Seat::native() -> wl_seat* {
+    return seat.get();
+}
+
 Seat::Seat(void* const data, const uint32_t version, KeyboardCallbacks* const keyboard_callbacks, PointerCallbacks* const pointer_callbacks, TouchCallbacks* const touch_callbacks)
     : seat(std::bit_cast<wl_seat*>(data), {version}),
       keyboard_callbacks(keyboard_callbacks),
       pointer_callbacks(pointer_callbacks),
       touch_callbacks(touch_callbacks) {
-          wl_seat_add_listener(seat.get(), &listener, this);
-      }
+    wl_seat_add_listener(seat.get(), &listener, this);
+}
 
 auto SeatBinder::get_interface_description() -> const wl_interface* {
     return &wl_seat_interface;

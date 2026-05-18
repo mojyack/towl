@@ -35,6 +35,8 @@ class Seat : public impl::Interface {
     static inline wl_seat_listener listener = {capabilities, name};
 
   public:
+    auto native() -> wl_seat*;
+
     Seat(void* data, uint32_t version, KeyboardCallbacks* keyboard_callbacks, PointerCallbacks* pointer_callbacks, TouchCallbacks* touch_callbacks);
 };
 
