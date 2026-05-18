@@ -76,8 +76,6 @@ class XDGWMBase : public impl::Interface {
 
 // version = 1 ~ 5
 struct XDGWMBaseBinder : impl::InterfaceBinder {
-    uint32_t interface_version;
-
     auto get_interface_description() -> const wl_interface* override;
     auto create_interface(void* data) -> std::unique_ptr<impl::Interface> override;
 
