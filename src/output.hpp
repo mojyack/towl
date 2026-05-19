@@ -16,8 +16,23 @@ using AutoNativeOutput = std::unique_ptr<wl_output, AutoNativeOutputDeleter>;
 namespace towl {
 class OutputCallbacks {
   public:
-    virtual auto on_wl_output_scale(wl_output* /*output*/, uint32_t /*scale*/) -> void {}
-    virtual ~OutputCallbacks(){};
+    virtual auto on_wl_output_created(wl_output* /*output*/) -> void {}
+    virtual auto on_wl_output_removed(wl_output* /*output*/) -> void {}
+    virtual auto on_wl_output_geometry(wl_output* /*output*/,
+                                       int32_t /*x*/, int32_t /*y*/,
+                                       int32_t /*physical_width*/, int32_t /*physical_height*/,
+                                       int32_t /*subpixel*/,
+                                       const char* /*make*/, const char* /*model*/,
+                                       int32_t /*transform*/) -> void {}
+    virtual auto on_wl_output_mode(wl_output* /*output*/,
+                                   uint32_t /*flags*/,
+                                   int32_t /*width*/, int32_t /*height*/,
+                                   int32_t /*refresh*/) -> void {}
+    virtual auto on_wl_output_done(wl_output* /*output*/) -> void {}
+    virtual auto on_wl_output_scale(wl_output* /*output*/, int32_t /*scale*/) -> void {}
+    virtual auto on_wl_output_name(wl_output* /*output*/, const char* /*name*/) -> void {}
+    virtual auto on_wl_output_description(wl_output* /*output*/, const char* /*description*/) -> void {}
+    virtual ~OutputCallbacks() {};
 };
 
 class Output : public impl::Interface {
@@ -25,43 +40,26 @@ class Output : public impl::Interface {
     impl::AutoNativeOutput output;
     OutputCallbacks*       callbacks;
 
-    static auto geometry(void* /*data*/,
-                         wl_output* /*wl_output*/,
-                         int32_t /*x*/,
-                         int32_t /*y*/,
-                         int32_t /*physical_width*/,
-                         int32_t /*physical_height*/,
-                         int32_t /*subpixel*/,
-                         const char* /*make*/,
-                         const char* /*model*/,
-                         int32_t /*transform*/) -> void {}
-
-    static auto mode(void* /*data*/,
-                     wl_output* /*wl_output*/,
-                     uint32_t /*flags*/,
-                     int32_t /*width*/,
-                     int32_t /*height*/,
-                     int32_t /*refresh*/) -> void {}
-
-    static auto done(void* /*data*/,
-                     wl_output* /*wl_output*/) -> void {}
-
-    static auto scale(void* data,
-                      wl_output* /*wl_output*/,
-                      int32_t factor) -> void;
-
-    static auto name(void* /*data*/,
-                     wl_output* /*wl_output*/,
-                     const char* /*name*/) -> void {}
-
-    static auto description(void* /*data*/,
-                            wl_output* /*wl_output*/,
-                            const char* /*description*/) -> void {}
+    static auto geometry(void* data, wl_output* wl_output,
+                         int32_t x, int32_t y,
+                         int32_t physical_width, int32_t physical_height,
+                         int32_t     subpixel,
+                         const char* make, const char* model,
+                         int32_t transform) -> void;
+    static auto mode(void* data, wl_output* wl_output,
+                     uint32_t flags,
+                     int32_t width, int32_t height,
+                     int32_t refresh) -> void;
+    static auto done(void* data, wl_output* wl_output) -> void;
+    static auto scale(void* data, wl_output* wl_output, int32_t factor) -> void;
+    static auto name(void* data, wl_output* wl_output, const char* name) -> void;
+    static auto description(void* data, wl_output* wl_output, const char* description) -> void;
 
     static inline wl_output_listener listener = {geometry, mode, done, scale, name, description};
 
   public:
     Output(void* data, uint32_t version, OutputCallbacks* callbacks);
+    ~Output() override;
 };
 
 // version = 1 ~ 4
