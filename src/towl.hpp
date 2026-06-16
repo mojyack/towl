@@ -9,4 +9,6 @@
 #include "shm.hpp"
 #include "xdg-wm-base.hpp"
 
+#include "layer-shell.hpp"
+
 #include "egl.hpp"

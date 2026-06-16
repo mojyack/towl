@@ -11,6 +11,7 @@ towl_files = files(
   'shell.cpp',
   'shm.cpp',
   'xdg-wm-base.cpp',
+  'layer-shell.cpp',
   'egl.cpp',
 )
 
@@ -25,6 +26,7 @@ wayland_scanner     = find_program(wayland_scanner_dep.get_variable(pkgconfig : 
 protocol_dir = wayland_protocols.get_variable('pkgdatadir')
 protocols = [
   [protocol_dir, 'stable/xdg-shell/xdg-shell.xml'],
+  [meson.current_source_dir(), 'protocols', 'wlr-layer-shell-unstable-v1.xml'],
 ]
 
 protocol_files = []
